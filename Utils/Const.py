@@ -1,0 +1,46 @@
+# -- Player Directions
+DIR_LEFT = -1
+DIR_RIGHT = 1
+DIR_STRAIGHT = 0
+
+# -- Player sizes
+SIZE_MIN = 4
+SIZE_NORMAL = 6
+SIZE_BIG = 12
+SIZE_BIGGER = 24
+SIZE_MAX = 48
+
+SIZES = [SIZE_MIN, SIZE_NORMAL, SIZE_BIG, SIZE_BIGGER, SIZE_MAX]
+
+# -- Player speeds
+SPEED_NORMAL = 4
+SPEED_SLOW = 3
+SPEED_MIN = 2  # Min speed should always be greater than the current size (otherwise 90 degree turns kill instantly)
+SPEED_FAST = 6
+SPEED_MAX = 8
+
+SPEEDS = [SPEED_MIN, SPEED_SLOW, SPEED_NORMAL, SPEED_FAST, SPEED_MAX]
+
+# -- Player turn rates
+RATE_NORMAL = 10
+RATE_SLOW = 8
+RATE_FAST = 15
+RATE_MIN = 6
+RATE_MAX = 20
+
+RATE_RIGHT_ANGLE = 90
+
+RATES = [RATE_MIN, RATE_SLOW, RATE_NORMAL, RATE_FAST, RATE_MAX]
+
+# -- Item durations
+DURATION_INSTANT = 0
+DURATION_ONETIME = 1
+DURATION_INFINITE = -1
+
+DURATION_SHORT = 200
+DURATION_NORMAL = 350
+DURATION_LONG = 500
+
+# -- Item size in pixels
+ITEMSIZE = 20
+
