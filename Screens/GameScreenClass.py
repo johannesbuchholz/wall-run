@@ -123,7 +123,7 @@ class GameScreen(Frame):
         self.items_spawned = {}  # Dict of triple: (item object, PhotoImage of icon, position of top left pixel)
         self.item_id = 1  # Key for items_spawned dict. Rolling int per round starting at 1.
         self.items_active = []  # List of tuple of currently active items (item object, expiration tick)
-        self.item_drop_chance = 0.0075  # Chance to spawn an item per tick.
+        self.item_drop_chance = 0.005  # Chance to spawn an item per tick.
 
         # -- Other
         self.thread_jobs = None  # will be defined in start_round
@@ -783,8 +783,8 @@ class GameScreen(Frame):
             if self.item_max_count <= len(self.items_spawned):
                 oldest_id = min(self.items_spawned.keys())
                 self.remove_item(oldest_id)
-            x_rand = self.rng.integers(100, self.controller.field_size-100)
-            y_rand = self.rng.integers(100, self.controller.field_size-100)
+            x_rand = self.rng.integers(ITEMSIZE, self.controller.field_size-ITEMSIZE)
+            y_rand = self.rng.integers(ITEMSIZE, self.controller.field_size-ITEMSIZE)
             self.place_item(name=self.rng.choice(self.controller.item_names), pos=(x_rand, y_rand))
 
     def update_visuals(self, old_traces):

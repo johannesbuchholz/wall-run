@@ -52,7 +52,7 @@ class GUI(Tk):
         # All items registered
         self.all_items = ["ItemClear", "ItemBlock", "ItemJump", "ItemGlueAll", "ItemSlickSelf", "ItemFly",
                           "ItemRemoveBorder", "ItemZiggZaggSelf", "ItemZiggZaggAll", "ItemFastAll", "ItemFastSelf",
-                          "ItemSlowAll", "ItemSlowSelf", "ItemRandom"]
+                          "ItemSlowAll", "ItemSlowSelf", "ItemRandom", "ItemPackage"]
         # All items chosen for the current game. Might be changed by options.
         self.item_names = list(self.all_items)
         # GUI objects

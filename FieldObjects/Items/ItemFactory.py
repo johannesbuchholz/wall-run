@@ -21,6 +21,7 @@ from FieldObjects.Items.ItemGlueAll import ItemGlueAll
 from FieldObjects.Items.ItemSlickSelf import ItemSlickSelf
 from FieldObjects.Items.ItemBlock import ItemBlock
 from FieldObjects.Items.ItemRandom import ItemRandom
+from FieldObjects.Items.ItemPackage import ItemPackage
 
 
 # Stores all imported classes in a dictionary and thus makes them callable by their names.
