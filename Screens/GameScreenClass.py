@@ -1,5 +1,6 @@
 
-import numpy as np
+from numpy import sin, cos, radians, zeros, ones
+from numpy.random import default_rng
 
 from threading import Thread
 from tkinter import *
@@ -40,7 +41,7 @@ class GameScreen(Frame):
         # -- ATTRIBUTES
         self.current_round = 0
         self.max_wins = self.controller.max_rounds
-        self.walls = np.zeros((self.controller.field_size, self.controller.field_size))
+        self.walls = zeros((self.controller.field_size, self.controller.field_size))
         self.gap_rate = 100  # Higher means fewer gaps
         self.gap_length = 3
 
@@ -118,19 +119,31 @@ class GameScreen(Frame):
 
         # -- Item related
         self.item_max_count = 6  # Total number of items that is allowed to exist on the field.
-        self.items = np.zeros((self.controller.field_size, self.controller.field_size), dtype="int")  # Item locations
+        self.items = zeros((self.controller.field_size, self.controller.field_size), dtype="int")  # Item locations
         self.items_spawned = {}  # Dict of triple: (item object, PhotoImage of icon, position of top left pixel)
-        self.item_id = 1  # Key for items_spawned dict. Int from 1 to self-item_max_count
+        self.item_id = 1  # Key for items_spawned dict. Rolling int per round starting at 1.
         self.items_active = []  # List of tuple of currently active items (item object, expiration tick)
-        self.item_drop_chance = 0.015  # Chance to spawn an item per tick.
+        self.item_drop_chance = 0.0075  # Chance to spawn an item per tick.
 
         # -- Other
         self.thread_jobs = None  # will be defined in start_round
         self.player_dot_traces = None  # will be defined in initialise_new_round
-        self.rng = np.random.default_rng()  # RNG object
+        self.rng = default_rng()  # RNG object
 
         # -- Listeners for space bar
         self.listener_space = None
+
+    def remove_item(self, item_id):
+        """
+        Removes an item from the field by its round specific id, both visually and effectively.
+
+        :param item_id: int, id of the item to remove. Needs to be present in self..items_spawned.
+        :return: triple (removed item instance, item icon, pos)
+        """
+        item_to_remove, icon, pos = self.items_spawned.pop(item_id)
+        x, y = pos
+        self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = 0
+        return item_to_remove, icon, pos
 
     def place_item(self, name, pos):
         """
@@ -141,47 +154,24 @@ class GameScreen(Frame):
         :param pos: Tuple of size 2 of int, position on the game field to place the item.
         :return: None
         """
-        # -- Remove old item effectively from the field if needed
-        if self.item_id in self.items_spawned.keys():
-            _, _, pos_old = self.items_spawned[self.item_id]
-            x_old, y_old = pos_old
-            # Reset entries on teh item matrix
-            self.items[x_old:x_old+ITEMSIZE, y_old:y_old+ITEMSIZE] = 0
-
         # -- Create and store item
         item_to_place = create_item_by_name(name, pos, self.controller, self)
         icon = PhotoImage(file=item_to_place.image_path)
         self.items_spawned[self.item_id] = (item_to_place, icon, pos)
-
-        # -- Place item on the field (might remove an old item visually)
+        # -- Place item on the field
         # visually
         x, y = pos
         offset = (self.controller.canvas_size - self.controller.field_size)/2  # Offset between canvas and game field.
         self.canvas.create_image(offset + x, offset + y, image=icon, anchor=NW)  # Icon is put un CANVAS not field
         # effectively
-        # x_set = [i % self.controller.field_size for i in range(x, x+ITEMSIZE) for _ in range(ITEMSIZE)]
-        # y_set = [i % self.controller.field_size for i in range(y, y+ITEMSIZE)] * ITEMSIZE
         self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = self.item_id
-
-        # -- Increase item id
-        self.item_id = ((self.item_id + 1) % self.item_max_count)
-        # Set item id to 1 as minimum value.
-        if self.item_id == 0:
-            self.item_id = 1
-
-    def prepare_game_screen(self):
-        """
-        This unction should be called when the game screen becomes visible for the user. It prepares all teh buttons
-        and the space listener for initializing, starting or pausing the rounds.
-
-        :return: None
-        """
-        self.set_buttons(state="init")
+        # -- Increase item item_id
+        self.item_id = self.item_id + 1
 
     def make_listener(self, act):
         """
         Makes a listener for space key to init or start or pause a round. It also stops the old listener.
-        :param act: string, type action the listener should have ( should be "init" or "go" or "pause").
+        :param act: string, type of action the listener should have (use "init". "go" or "pause").
         :return: None
         """
         self.turn_off_space_listener()
@@ -205,7 +195,7 @@ class GameScreen(Frame):
             self.listener_space = keyboard.Listener(on_press=on_press)
 
     def initiate_canvas(self):
-        self.walls = np.zeros((self.controller.field_size, self.controller.field_size))
+        self.walls = zeros((self.controller.field_size, self.controller.field_size))
         self.canvas.destroy()
         self.canvas = Canvas(master=self,
                              width=self.controller.canvas_size,
@@ -348,15 +338,15 @@ class GameScreen(Frame):
         :return: None
         """
         if on:
-            self.walls[0, :] = -np.ones(self.controller.field_size)
-            self.walls[-1, :] = -np.ones(self.controller.field_size)
-            self.walls[:, 0] = -np.ones(self.controller.field_size)
-            self.walls[:, -1] = -np.ones(self.controller.field_size)
+            self.walls[0, :] = -ones(self.controller.field_size)
+            self.walls[-1, :] = -ones(self.controller.field_size)
+            self.walls[:, 0] = -ones(self.controller.field_size)
+            self.walls[:, -1] = -ones(self.controller.field_size)
         else:
-            self.walls[0, :] = np.zeros(self.controller.field_size)
-            self.walls[-1, :] = np.zeros(self.controller.field_size)
-            self.walls[:, 0] = np.zeros(self.controller.field_size)
-            self.walls[:, -1] = np.zeros(self.controller.field_size)
+            self.walls[0, :] = zeros(self.controller.field_size)
+            self.walls[-1, :] = zeros(self.controller.field_size)
+            self.walls[:, 0] = zeros(self.controller.field_size)
+            self.walls[:, -1] = zeros(self.controller.field_size)
 
     def put_trace_by_function(self, func, rect):
         """
@@ -412,7 +402,7 @@ class GameScreen(Frame):
         # check all pixels in square
         X, Y = pos
         trace = []
-        for x, y in [(x,y) for x in range(X-r, X+r+1) for y in range(Y-r, Y+r+1)]:
+        for x, y in [(x, y) for x in range(X-r, X+r+1) for y in range(Y-r, Y+r+1)]:
             if (x - X)**2+(y-Y)**2 < r:
                 # append if pixel is in circle around pos
                 trace.append((x % self.controller.field_size,
@@ -430,9 +420,9 @@ class GameScreen(Frame):
         :return: tuple of size 2.
         """
         x, y = pos
-        rad = np.radians(angle % 360)
-        return ((x + round(np.cos(rad) * dist)) % self.controller.field_size,
-                (y + round(np.sin(rad) * dist)) % self.controller.field_size
+        rad = radians(angle % 360)
+        return ((x + round(cos(rad) * dist)) % self.controller.field_size,
+                (y + round(sin(rad) * dist)) % self.controller.field_size
                 )
 
     def way_trace(self, dot_trace, dist, angle, sparse=1):
@@ -603,8 +593,7 @@ class GameScreen(Frame):
     def ticker(self):
         """
         Collects all jobs that have to be done every tick.
-        This includes managing the space listener as well as all movement related tasks.
-        This function puts its calling thread to sleep and should be called within a separate thread.
+        This function puts its calling thread to sleep and therefore should be called within a separate thread.
 
         :return: None
         """
@@ -633,7 +622,7 @@ class GameScreen(Frame):
                                        fg="black")
             else:
                 first_loop = False
-            sleep(max(0, self._interval-(update-start)))
+            sleep(max([0, self._interval-(update-start)]))
             # end = default_timer()
             # print("Tick length:", end - start, "\n==============")
 
@@ -649,7 +638,7 @@ class GameScreen(Frame):
             item.deactivate()
         self.items_spawned = {}
         self.items_active = []
-        self.items = np.zeros((self.controller.field_size, self.controller.field_size), dtype="int")
+        self.items = zeros((self.controller.field_size, self.controller.field_size), dtype="int")
 
     def solve_round_end(self):
         """
@@ -776,17 +765,8 @@ class GameScreen(Frame):
                         break
                     # Items
                     if p.alive and self.items[pix] > 0:
-                        item, _, pos = self.items_spawned.pop(self.items[pix])
-                        # Set entries in items-matrix to zero.
-                        x, y = pos
-                        x_set = [i % self.controller.field_size
-                                 for i in range(x, x + ITEMSIZE)
-                                 for _ in range(ITEMSIZE)
-                                 ]
-                        y_set = [i % self.controller.field_size
-                                 for i in range(y, y + ITEMSIZE)
-                                 ] * ITEMSIZE
-                        self.items[x_set, y_set] = 0
+                        item_id = self.items[pix]
+                        item, _, pos = self.remove_item(item_id)  # Remove item from field and item-matrix
                         # activate item
                         self.items_active.append((item, self.tick_count + item.duration))
                         item.activate(player=p)  # Activate the effect
@@ -798,7 +778,11 @@ class GameScreen(Frame):
                 item.deactivate()
                 self.items_active.remove(tup)
         # Place items
-        if self.rng.random() < self.item_drop_chance:
+        if self.item_max_count > 0 and self.rng.random() < self.item_drop_chance:
+            # Remove oldest item if the max count is reached.
+            if self.item_max_count <= len(self.items_spawned):
+                oldest_id = min(self.items_spawned.keys())
+                self.remove_item(oldest_id)
             x_rand = self.rng.integers(100, self.controller.field_size-100)
             y_rand = self.rng.integers(100, self.controller.field_size-100)
             self.place_item(name=self.rng.choice(self.controller.item_names), pos=(x_rand, y_rand))
@@ -826,4 +810,3 @@ class GameScreen(Frame):
                 else:
                     # Player is not flying. Print head as usual.
                     self.put_trace(trace=p.dot_trace, color="White")
-

@@ -52,23 +52,9 @@ class GUI(Tk):
         # All items registered
         self.all_items = ["ItemClear", "ItemBlock", "ItemJump", "ItemGlueAll", "ItemSlickSelf", "ItemFly",
                           "ItemRemoveBorder", "ItemZiggZaggSelf", "ItemZiggZaggAll", "ItemFastAll", "ItemFastSelf",
-                          "ItemSlowAll", "ItemSlowSelf"]
+                          "ItemSlowAll", "ItemSlowSelf", "ItemRandom"]
         # All items chosen for the current game. Might be changed by options.
-        self.item_names = [
-            "ItemBlock",
-            "ItemJump",
-            "ItemGlueAll",
-            "ItemSlickSelf",
-            "ItemFly",
-            "ItemRemoveBorder",
-            "ItemZiggZaggSelf",
-            "ItemZiggZaggAll",
-            "ItemFastAll",
-            "ItemFastSelf",
-            "ItemSlowAll",
-            "ItemSlowSelf",
-            "ItemClear",
-        ]
+        self.item_names = list(self.all_items)
         # GUI objects
         self.frames = {"Title": titles.TitleScreen(parent=container, controller=self),
                        "Rules": rules.RuleScreen(parent=container, controller=self),

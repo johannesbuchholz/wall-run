@@ -20,6 +20,7 @@ from FieldObjects.Items.ItemJump import ItemJump
 from FieldObjects.Items.ItemGlueAll import ItemGlueAll
 from FieldObjects.Items.ItemSlickSelf import ItemSlickSelf
 from FieldObjects.Items.ItemBlock import ItemBlock
+from FieldObjects.Items.ItemRandom import ItemRandom
 
 
 # Stores all imported classes in a dictionary and thus makes them callable by their names.

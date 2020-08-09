@@ -6,11 +6,11 @@ For now, there is no stand-alone version of this game so you have to run the \_\
 
 ## Needed Packages
 In order to run this game you need the following packages:
-- numpy
+- numpy (>=1.19.1)
 - time
 - timeit
 - threading
-- pynput
+- pynput (>=1.6.8)
 - tkinter
 
 A detailed requirements list of the single needed functions from the list might follow 
