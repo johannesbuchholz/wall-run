@@ -43,7 +43,7 @@ class GameScreen(Frame):
         self.max_wins = self.controller.max_rounds
         self.walls = zeros((self.controller.field_size, self.controller.field_size))
         self.gap_rate = 100  # Higher means fewer gaps
-        self.gap_length = 3
+        self.gap_length = 4
 
         self.running = False
         self.tick_count = 0
@@ -182,7 +182,8 @@ class GameScreen(Frame):
 
     def make_listener(self, act):
         """
-        Makes a listener for space key to init or start or pause a round. It also stops the old listener.
+        Makes a listener for the space key to init or start or pause a round. It also stops the old listener.
+
         :param act: string, type of action the listener should have (use "init". "go" or "pause").
         :return: None
         """
@@ -314,6 +315,7 @@ class GameScreen(Frame):
         p.speed = SPEED_NORMAL
         p.turn_rate = RATE_NORMAL
         p.size = SIZE_NORMAL
+        p.key_is_held_down = False
 
         p.alive = True
         # Set facing angle.

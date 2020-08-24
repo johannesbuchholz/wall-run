@@ -42,5 +42,5 @@ class ItemBigAll(ItemBase):
                 pass
             else:
                 # Choose next bigger value from the SPEEDS list
-                p.size = SIZES[max(SIZES.index(p.size) + 1, 0)]
+                p.size = SIZES[max(SIZES.index(p.size) - 1, 0)]
 

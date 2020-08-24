@@ -33,7 +33,7 @@ class ItemRandom(ItemBase):
         item_to_create = self.rng.choice(self.available_item_names)
         item_module = import_module("FieldObjects.Items."+item_to_create)
         item_class = getattr(item_module, item_to_create)
-        emulated_item = item_class(self.player.pos, self.controller, self.gamescreen)
+        emulated_item = item_class(self.controller, self.gamescreen)
 
         # Activate the random item and place it in the gamescreen's active items.
         emulated_item.activate(self.player)
