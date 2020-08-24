@@ -9,8 +9,8 @@ class ItemZiggZaggAll(ItemBase):
     Every turn will then be a 90 degree turn.
     """
     # __init__ from base class.
-    def __init__(self, pos, controller, gamescreen):
-        ItemBase.__init__(self, pos, controller, gamescreen)
+    def __init__(self, controller, gamescreen):
+        ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_SHORT
         self.image_path = "Data/IconZiggZaggAll.png"
 

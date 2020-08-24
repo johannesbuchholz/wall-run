@@ -4,18 +4,16 @@ from Utils.Const import *
 
 class ItemBase:
     """
-    This class represents the base class of all that may appear on the screen. This class should not be instantiated.
+    This class represents the base class of all items that may appear on the screen. It does not have any effect.
     """
-    def __init__(self, pos, controller, gamescreen):
+    def __init__(self, controller, gamescreen):
         """
         Creates an base Item.
 
-        :param pos: Position of the item as tuple of size 2 (x,y)
         :param controller: Controller instance of the game screen.
         :param gamescreen: The gamescreen instance where this item is placed in.
         """
 
-        self.pos = pos
         self.controller = controller
         self.gamescreen = gamescreen
 

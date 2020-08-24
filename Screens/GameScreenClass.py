@@ -1,7 +1,7 @@
+from importlib import import_module
 
 from numpy import sin, cos, radians, zeros, ones
 from numpy.random import default_rng
-
 from threading import Thread
 from tkinter import *
 from time import sleep
@@ -9,7 +9,7 @@ from timeit import default_timer
 from pynput import keyboard
 
 from Utils.Const import *
-from FieldObjects.Items.ItemFactory import create_item_by_name
+from Utils.HelperFunctions import get_rectangle_corners
 
 
 class GameScreen(Frame):
@@ -47,7 +47,7 @@ class GameScreen(Frame):
 
         self.running = False
         self.tick_count = 0
-        self._interval = 1/22  # tick interval in seconds
+        self._interval = 1/28  # tick interval in seconds
 
         self.practice_game = False  # If True, every round ends in a draw.
 
@@ -145,6 +145,18 @@ class GameScreen(Frame):
         self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = 0
         return item_to_remove, icon, pos
 
+    def create_item_by_name(self, name):
+        """
+        Creates a random item instance among all registered items and returns it.
+
+        :param name: string, name of the item-class
+        :return: Item instance of given class name.
+        """
+
+        item_module = import_module("FieldObjects.Items." + name)
+        item_class = getattr(item_module, name)
+        return item_class(self.controller, self)
+
     def place_item(self, name, pos):
         """
         Places the item identified by name on the game field at pos. This function also draws the item on the canvas
@@ -155,7 +167,7 @@ class GameScreen(Frame):
         :return: None
         """
         # -- Create and store item
-        item_to_place = create_item_by_name(name, pos, self.controller, self)
+        item_to_place = self.create_item_by_name(name)
         icon = PhotoImage(file=item_to_place.image_path)
         self.items_spawned[self.item_id] = (item_to_place, icon, pos)
         # -- Place item on the field
@@ -319,17 +331,23 @@ class GameScreen(Frame):
         else:
             p.pos = pos
 
-        p.dot_trace = self.dot_trace(pos=p.pos, r=p.size)
+        # p.dot_trace = self.dot_trace(pos=p.pos, r=p.size)
+        p.dot_trace, p.data_strings, p.rect_corners = self.dot_trace_string_data_rect_corners(pos=p.pos,
+                                                                                              r=p.size,
+                                                                                              color=p.color)
         # get wall trace
-        tail_len = 24
-        tail_trace = self.way_trace(dot_trace=p.dot_trace, dist=tail_len, angle=p.angle+180, sparse=p.size)
+        tail_len = 12
+        tail_trace = self.way_trace(dot_trace=p.dot_trace, dist=tail_len,
+                                    angle=(p.angle+180) % 360, sparse=int(p.size/2)
+                                    )
         # update walls
         for c in [x for x in tail_trace if x not in p.dot_trace]:  # prevent crash with own way trace
             self.walls[c] = -1
         # draw trace
         self.put_trace(trace=tail_trace, color=p.color)
         # draw head
-        self.put_trace(trace=p.dot_trace, color="White")
+        # self.put_trace(trace=p.dot_trace, color="White")
+        self.field_image.put(data=p.data_strings[0].replace(p.color, "White"), to=p.rect_corners[0])
 
     def toggle_border(self, on=True):
         """
@@ -410,6 +428,75 @@ class GameScreen(Frame):
                              )
         return trace
 
+    def dot_trace_string_data_rect_corners(self, pos, r, color):
+        """
+        Computes a string containing the information for drawing a dot with the native PhotoImage put function.
+        The returned string-data does not cross the game field border.
+        """
+        crossing_bot = []
+        crossing_bot_left = []
+        crossing_bot_right = []
+        crossing_top = []
+        crossing_top_left = []
+        crossing_top_right = []
+        crossing_left = []
+        crossing_right = []
+        crossing_nothing = []
+        crossing_sets = [crossing_bot, crossing_bot_left, crossing_bot_right, crossing_top, crossing_top_left,
+                         crossing_top_right, crossing_left, crossing_right, crossing_nothing]
+
+        X, Y = pos
+        dot_trace = []
+        for x, y in [(x, y) for x in range(X-r, X+r+1) for y in range(Y-r, Y+r+1)]:
+            if (x - X)**2+(y - Y)**2 < r:
+                # Decide if and where pixels cross the field-border
+                if x < 0 and y < 0:
+                    crossing_top_left.append((x % self.controller.field_size, y % self.controller.field_size))
+                elif x < 0 and y >= self.controller.field_size:
+                    crossing_bot_left.append((x % self.controller.field_size, y % self.controller.field_size))
+                elif x >= self.controller.field_size and y < 0:
+                    crossing_top_right.append((x % self.controller.field_size, y % self.controller.field_size))
+                elif x >= self.controller.field_size and y >= self.controller.field_size:
+                    crossing_bot_right.append((x % self.controller.field_size, y % self.controller.field_size))
+                elif x < 0 and not y < 0 and not y >= self.controller.field_size:
+                    crossing_left.append((x % self.controller.field_size, y % self.controller.field_size))
+                elif x >= self.controller.field_size and not y < 0 and not y >= self.controller.field_size:
+                    crossing_right.append((x % self.controller.field_size, y % self.controller.field_size))
+                elif not x < 0 and not x >= self.controller.field_size and y < 0:
+                    crossing_top.append((x % self.controller.field_size, y % self.controller.field_size))
+                elif not x < 0 and not x >= self.controller.field_size and y >= self.controller.field_size:
+                    crossing_bot.append((x % self.controller.field_size, y % self.controller.field_size))
+                else:
+                    crossing_nothing.append((x % self.controller.field_size, y % self.controller.field_size))
+                dot_trace.append((x % self.controller.field_size, y % self.controller.field_size))
+
+        # ----- create string-data for PhotoImage's put method.
+        # Roll through every pixel of the square in the respective crossing set
+        data_strings = []
+        rect_corners = []
+        for crossing_set in crossing_sets:
+            if not crossing_set:
+                continue
+            data_string = ""
+            a, b, x, y = get_rectangle_corners(crossing_set)
+            for i in range(a, x+1):  # x-axis roll-through
+                data_string += "{"
+                for j in range(b, y+1):  # y-axis roll-through
+                    if (i, j) in crossing_set:
+                        data_string += color + " "
+                    else:
+                        current_color = self.field_image.get(i, j)
+                        if current_color == RGB_VALUES[color]:
+                            data_string += color + " "
+                        else:
+                            # data_string += "#{:02x}{:02x}{:02x}".format(*self.field_image.get(i, j)) + " "
+                            data_string += "Black" + " "
+                data_string += "} "
+            data_strings.append(data_string)
+            rect_corners.append((a, b, x+1, y+1))
+
+        return dot_trace, data_strings, rect_corners
+
     def get_target_pixel(self, pos, dist, angle):
         """
         Computes the pixel that is reached after going from pos in direction of angle for a distance of dist.
@@ -430,29 +517,21 @@ class GameScreen(Frame):
         Computes a list of positions if one starts from each position in dot_trace
         and goes a distance of dist facing the given angle.
 
-        :param dot_trace: list of tuple of size 2 of int or tuple
+        :param dot_trace: list of tuple of size 2 of int or tuple of size 2
         :param dist: distance to go, int
         :param angle: facing angle, int
         :param sparse: level of denseness between points, lower is denser. int > 0. default 1.
         :return: list of coordinates
         """
         way_trace = []
-        if type(dot_trace) is list:
-            for pix in dot_trace:
-                for d in range(dist):
-                    if d % sparse == 0:
-                        way_trace.append(self.get_target_pixel(pos=pix,
-                                                               dist=d,
-                                                               angle=angle
-                                                               )
-                                         )
-        else:
+        for pix in dot_trace:
             for d in range(dist):
-                way_trace.append(self.get_target_pixel(pos=dot_trace,
-                                                       dist=d,
-                                                       angle=angle
-                                                       )
-                                 )
+                if d % sparse == 0:
+                    way_trace.append(self.get_target_pixel(pos=pix,
+                                                           dist=d,
+                                                           angle=angle
+                                                           )
+                                     )
         return way_trace
 
     def set_buttons(self, state):
@@ -600,12 +679,14 @@ class GameScreen(Frame):
         first_loop = True
         while self.running:
             start = default_timer()
-            # print("Current Tick:", self._tick_count)
+            # print("Current Tick:", self.tick_count)
             self.tick_count += 1
-            old_traces = self.move()
-            # move = default_timer()
+            # #### old_traces = self.move()
+            old_traces = self.move_v2()
+            move = default_timer()
             # print("Time for move:", move - start)
-            self.update_visuals(old_traces)
+            # #### self.update_visuals(old_traces)
+            self.update_visuals_v2(old_traces)
             self.check_events()
             if self.check_round_end():
                 self.running = False
@@ -613,7 +694,6 @@ class GameScreen(Frame):
                 self.solve_round_end()
                 break
             update = default_timer()
-            # print("Sleep length:", self._interval-(update-start))
             # print("Time for update:", update - move)
             if not first_loop and self._interval-(update-start) < 0:
                 self.pause_round()
@@ -622,8 +702,9 @@ class GameScreen(Frame):
                                        fg="black")
             else:
                 first_loop = False
+            # print("Sleep length:", self._interval-(update-start))
             sleep(max([0, self._interval-(update-start)]))
-            # end = default_timer()
+            end = default_timer()
             # print("Tick length:", end - start, "\n==============")
 
     def reset_all_items(self):
@@ -721,23 +802,27 @@ class GameScreen(Frame):
         """
         old_way_traces = {}
         for p in self.controller.players:
+            if not p.alive:
+                continue
+            if p.move_command == DIR_LEFT:
+                p.angle = (p.angle - p.turn_rate) % 360
+                player_moved_straight = False
+            elif p.move_command == DIR_RIGHT:
+                p.angle = (p.angle + p.turn_rate) % 360
+                player_moved_straight = False
+            # compute new position
+            p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
             player_moved_straight = True
-            if p.alive:
-                if p.move_command == DIR_LEFT:
-                    p.angle = (p.angle - p.turn_rate) % 360
-                    player_moved_straight = False
-                elif p.move_command == DIR_RIGHT:
-                    p.angle = (p.angle + p.turn_rate) % 360
-                    player_moved_straight = False
-                # compute new position
-                p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
+
             # reset move_command if players turn rate is set to RATE_RIGHT_ANGLE.
             if p.turn_rate == RATE_RIGHT_ANGLE:
                 p.move_command = DIR_STRAIGHT
+
             # update new dot trace
             old_dot_trace = p.dot_trace
             old_way_traces[p] = old_dot_trace
             p.dot_trace = self.dot_trace(pos=p.pos, r=p.size)  # new dot trace at new position
+
             # update walls if...
             if (self.tick_count % self.gap_rate > self.gap_length  # it is not a tick where gaps are drawn &&
                     and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT a 90 degree turn &&
@@ -745,6 +830,47 @@ class GameScreen(Frame):
                 for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
                     self.walls[pix] = -1
         return old_way_traces
+
+    def move_v2(self):
+        """
+        This function moves every player by one step according to their current position, speed, angle and
+        move command. It also updates the walls with the way traces and returns a list of all the old player positions.
+
+        :return: dict of list of tuple of int of size 2.
+        """
+        old_data_strings_rect_corners = {}
+        for p in self.controller.players:
+            if not p.alive:
+                continue
+
+            player_moved_straight = True
+            if p.move_command == DIR_LEFT:
+                p.angle = (p.angle - p.turn_rate) % 360
+                player_moved_straight = False
+            elif p.move_command == DIR_RIGHT:
+                p.angle = (p.angle + p.turn_rate) % 360
+                player_moved_straight = False
+            # compute new position
+            p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
+
+            # reset move_command if players turn rate is set to RATE_RIGHT_ANGLE.
+            if p.turn_rate == RATE_RIGHT_ANGLE:
+                p.move_command = DIR_STRAIGHT
+
+            # update new dot trace
+            old_dot_trace = p.dot_trace
+            old_data_strings_rect_corners[p] = (p.data_strings, p.rect_corners)
+            p.dot_trace, p.data_strings, p.rect_corners = self.dot_trace_string_data_rect_corners(pos=p.pos,
+                                                                                                  r=p.size,
+                                                                                                  color=p.color)
+
+            # update walls if...
+            if (self.tick_count % self.gap_rate > self.gap_length  # it is not a tick where gaps are drawn &&
+                    and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT a 90 degree turn &&
+                    and not p.flying):  # player is not flying.
+                for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
+                    self.walls[pix] = -1
+        return old_data_strings_rect_corners
 
     def check_events(self):
         """
@@ -796,17 +922,45 @@ class GameScreen(Frame):
         """
         # Draw player traces and dots.
         for p in self.controller.players:
+            if not p.alive:
+                continue
             old_trace = old_traces[p]
-            if p.alive:
-                # draw old position if player is alive and not flying
-                if self.tick_count % self.gap_rate > self.gap_length and not p.flying:
-                    self.put_trace(trace=old_trace, color=p.color)
-                else:
-                    self.put_trace(trace=old_trace, color="Black")  # Override the previously drawn white head
-                # draw new player head
-                if p.flying and self.tick_count % 4 in [2, 3]:
-                    # Player is flying. Do not print every 3rd and 4th head position.
-                    pass
-                else:
-                    # Player is not flying. Print head as usual.
-                    self.put_trace(trace=p.dot_trace, color="White")
+            # draw old position if player is alive and not flying
+            if self.tick_count % self.gap_rate > self.gap_length and not p.flying:
+                self.put_trace(trace=old_trace, color=p.color)
+            else:
+                self.put_trace(trace=old_trace, color="Black")  # Override the previously drawn white head
+            # draw new player head
+            if p.flying and self.tick_count % 4 in [2, 3]:
+                # Player is flying. Do not print every 3rd and 4th head position.
+                pass
+            else:
+                # Player is not flying. Print head as usual.
+                self.put_trace(trace=p.dot_trace, color="White")
+
+    def update_visuals_v2(self, old_data_strings_rect_corners):
+        """
+        Draws the current position of each player on the canvas.
+        """
+        # Draw player traces and dots.
+        for p in self.controller.players:
+            if not p.alive:
+                continue
+            # draw old position if player is not flying
+            old_data_strings, old_rect_corners = old_data_strings_rect_corners[p]
+            if self.tick_count % self.gap_rate > self.gap_length and not p.flying:
+                for data_string, rect_corners in zip(old_data_strings, old_rect_corners):
+                    self.field_image.put(data=data_string, to=rect_corners)
+            else:
+                for data_string, rect_corners in zip(old_data_strings, old_rect_corners):
+                    self.field_image.put(data=data_string.replace(p.color, "Black"), to=rect_corners)
+
+            # draw new player head
+            if p.flying and self.tick_count % 4 in [2, 3]:
+                # Player is flying. Do not print every 3rd and 4th head position.
+                pass
+            else:
+                # Player is not flying. Print head as usual.
+                for data_string, rect_corners in zip(p.data_strings, p.rect_corners):
+                    self.field_image.put(data=data_string.replace(p.color, "White"),
+                                         to=rect_corners)

@@ -53,7 +53,10 @@ class Player:
         # FUNCTIONAL ATTRIBUTES
         self.move_command = DIR_STRAIGHT  # -1: left (DIR_LEFT) , 0: straight (DIR_STRAIGHT), 1: right (DIR_RIGHT)
         self.listener = None  # is defined in function call self.make_listener
-        self.dot_trace = None  # Will be defined during put_players in the GameScreen Class.
+        self.dot_trace = None  # Will be defined during put_players and move in the GameScreen Class.
+        self.data_strings = None
+        self.rect_corners = None
+        self.key_is_held_down = False  # Indicate if a movement key is currently held down.
 
     def make_listener(self):
         """
@@ -66,15 +69,22 @@ class Player:
         # LISTENER
         def on_press(key):
             # Movement functionality
-            if key == self.keys["left"]:
-                self.move_command = DIR_LEFT
-            elif key == self.keys["right"]:
-                self.move_command = DIR_RIGHT
-            else:
+            if self.key_is_held_down:
+                # Prevent sending multiple move commands if movement key is held down.
                 return
+            else:
+                if key == self.keys["left"]:
+                    self.key_is_held_down = True
+                    self.move_command = DIR_LEFT
+                elif key == self.keys["right"]:
+                    self.key_is_held_down = True
+                    self.move_command = DIR_RIGHT
+                else:
+                    return
 
         def on_release(key):
             if key == self.keys["left"] or key == self.keys["right"]:
+                self.key_is_held_down = False
                 self.move_command = DIR_STRAIGHT
             else:
                 return

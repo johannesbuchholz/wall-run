@@ -1,17 +1,15 @@
 
+from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
 
-class ItemGlueAll:
+class ItemGlueAll(ItemBase):
     """
     Makes all players sbut the collecting player turn slower.
     """
     # __init__ from base class.
-    def __init__(self, pos, controller, gamescreen):
-        self.pos = pos
-        self.controller = controller
-        self.gamescreen = gamescreen
-
+    def __init__(self, controller, gamescreen):
+        ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_SHORT
         # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconGlueAll.png"

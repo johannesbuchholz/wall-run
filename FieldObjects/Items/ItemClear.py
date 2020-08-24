@@ -8,8 +8,8 @@ class ItemClear(ItemBase):
     Clears all walls within the game field.
     """
     # __init__ from base class.
-    def __init__(self, pos, controller, gamescreen):
-        ItemBase.__init__(self, pos, controller, gamescreen)
+    def __init__(self, controller, gamescreen):
+        ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_INSTANT
         # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconClear.png"

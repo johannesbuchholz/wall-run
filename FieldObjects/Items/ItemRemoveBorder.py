@@ -6,12 +6,10 @@ from Utils.Const import *
 class ItemRemoveBorder(ItemBase):
     """
     Toggles the game screen borders off.
-    Afterwards:
-    Toggles borders on again. If there is another younger Item of this kind in action, this function does nothing.
     """
     # __init__ from base class.
-    def __init__(self, pos, controller, gamescreen):
-        ItemBase.__init__(self, pos, controller, gamescreen)
+    def __init__(self, controller, gamescreen):
+        ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_NORMAL
         self.image_path = "Data/IconRemoveBorder.png"  # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
 

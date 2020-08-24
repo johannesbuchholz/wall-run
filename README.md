@@ -6,6 +6,7 @@ For now, there is no stand-alone version of this game so you have to run the \_\
 
 ## Needed Packages
 In order to run this game you need the following packages:
+
 - numpy (>=1.19.1)
 - time
 - timeit

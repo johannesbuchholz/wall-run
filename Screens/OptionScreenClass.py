@@ -9,8 +9,9 @@ class OptionScreen(Frame):
         Frame.__init__(self, master=parent)
         self.parent = parent
         self.controller = controller
-
+        # #########################################################
         # -- Player attributes
+        # #########################################################
         self.p1 = {"name": "P1", "color": "Red",
                    "keys": {"left": keyboard.Key.left, "right": keyboard.Key.right},
                    "active": True,
@@ -67,6 +68,8 @@ class OptionScreen(Frame):
             .grid(row=6, column=1, columnspan=1, pady=10)
         Label(master=self, text="Items", font=self.controller.font_medium) \
             .grid(row=7, column=1, columnspan=1, pady=10)
+        Button(master=self, text="Toggle All", command=self.toggle_all_item_buttons) \
+            .grid(row=8, column=1, pady=10)
 
         # -- Buttons and fields regarding players specific options
         self.toggle_buttons = []
@@ -145,7 +148,9 @@ class OptionScreen(Frame):
         self.listener_adjust = None  # Will be defined in make_listener
         self.new_keys = []
 
+    # #########################################################
     # ----- Button Functions
+    # #########################################################
 
     def back(self):
         # remove focus
@@ -161,14 +166,6 @@ class OptionScreen(Frame):
         # reset buttons
         for b in self.adjust_buttons:
             b.config(borderwidth=2, relief="raised")
-        # # reset item choices and respective buttons
-        # self.item_names_to_apply = self.controller.item_names
-        # for item_name in self.controller.all_items:
-        #     if item_name in self.controller.item_names:
-        #         self.item_buttons[item_name].config(relief="sunken")
-        #     else:
-        #         self.item_buttons[item_name].config(relief="raised")
-        # show title screen
         self.controller.show_frame("Title")
 
     def apply(self):
@@ -199,7 +196,9 @@ class OptionScreen(Frame):
         self.controller.show_frame("Title")
         self.controller.item_names = self.item_names_to_apply
 
+    # ############################
     # Toggling players
+    # ############################
     def toggle_player(self, i):
         """
         Turns off and on the ith player of in the p_options list.
@@ -211,7 +210,9 @@ class OptionScreen(Frame):
         else:
             self.toggle_buttons[i].config(borderwidth=2, relief="raised")
 
+    # ############################
     # Toggling items
+    # ############################
     def toggle_item(self, item_name):
         """
         Appends or removes the the string item_name from self.controller.item_names.
@@ -225,7 +226,16 @@ class OptionScreen(Frame):
             self.item_names_to_apply.append(item_name)
             self.item_buttons[item_name].config(relief="sunken")
 
+    def toggle_all_item_buttons(self):
+        """
+        Toggles each item button once.
+        """
+        for item_name in self.controller.all_items:
+            self.toggle_item(item_name)
+
+    # ############################
     # Direction-Keys related
+    # ############################
     def make_listener(self, i):
         """
         Makes a listener for player i (0 to 5) that records the next two key presses. First press becomes left command,

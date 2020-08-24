@@ -9,8 +9,8 @@ class ItemFly(ItemBase):
     of this item being active.
     """
     # __init__ from base class.
-    def __init__(self, pos, controller, gamescreen):
-        ItemBase.__init__(self, pos, controller, gamescreen)
+    def __init__(self, controller, gamescreen):
+        ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_SHORT
         # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconFly.png"

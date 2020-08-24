@@ -4,18 +4,17 @@ DIR_RIGHT = 1
 DIR_STRAIGHT = 0
 
 # -- Player sizes
-SIZE_MIN = 4
+SIZE_MIN = 3
 SIZE_NORMAL = 6
-SIZE_BIG = 12
-SIZE_BIGGER = 24
-SIZE_MAX = 48
+SIZE_BIG = 14
+SIZE_MAX = 16
 
-SIZES = [SIZE_MIN, SIZE_NORMAL, SIZE_BIG, SIZE_BIGGER, SIZE_MAX]
+SIZES = [SIZE_MIN, SIZE_NORMAL, SIZE_BIG, SIZE_MAX]
 
 # -- Player speeds
 SPEED_NORMAL = 4
 SPEED_SLOW = 3
-SPEED_MIN = 2  # Min speed should always be greater than the current size (otherwise 90 degree turns kill instantly)
+SPEED_MIN = 2
 SPEED_FAST = 6
 SPEED_MAX = 8
 
@@ -43,4 +42,15 @@ DURATION_LONG = 500
 
 # -- Item size in pixels
 ITEMSIZE = 20
+
+# -- Colors RGB
+RGB_VALUES = {"Red": (255, 0, 0), "red": (255, 0, 0),
+              "Green": (0, 255, 0), "green": (0, 255, 0),
+              "Blue": (0, 0, 255), "blue": (0, 0, 255),
+              "Orange": (255, 127, 0), "orange": (255, 127, 0),
+              "Cyan": (0, 183, 235), "cyan": (0, 183, 235),
+              "Grey": (128, 128, 128), "grey": (128, 128, 128),
+              "Black": (0, 0, 0), "black": (0, 0, 0),
+              "White": (255, 255, 255), "white": (255, 255, 255),
+              }
 
