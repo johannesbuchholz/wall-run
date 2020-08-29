@@ -1,5 +1,6 @@
 
-from tkinter import *
+from tkinter import (Frame, Label, Button,
+                     TOP, CENTER, BOTTOM, DISABLED)
 from Screens import GameScreenClass as games
 
 
@@ -54,12 +55,12 @@ class TitleScreen(Frame):
                cnf=button_setting,
                ).pack(side=TOP, anchor=CENTER)
 
-        Button(master=self,
-               text="Rules",
-               command=lambda: controller.show_frame("Rules"),
-               state=DISABLED,
-               cnf=button_setting,
-               ).pack(side=TOP, anchor=CENTER)
+        # Button(master=self,
+        #        text="Rules",
+        #        command=lambda: controller.show_frame("Rules"),
+        #        state=DISABLED,
+        #        cnf=button_setting,
+        #        ).pack(side=TOP, anchor=CENTER)
 
         Button(master=self,
                text="Exit",

@@ -1,5 +1,5 @@
 
-from numpy import random
+from numpy.random import default_rng
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -14,7 +14,7 @@ class ItemBlock(ItemBase):
         self.duration = DURATION_INFINITE  # No effective usage
         # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconBlock.png"
-        self.rng = random.default_rng()
+        self.rng = default_rng()
         self.blocksize = 80
 
     def activate(self, player):

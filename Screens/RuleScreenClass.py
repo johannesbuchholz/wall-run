@@ -1,5 +1,5 @@
 
-from tkinter import *
+from tkinter import (Frame)
 
 
 class RuleScreen(Frame):

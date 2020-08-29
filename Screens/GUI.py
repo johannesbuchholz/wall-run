@@ -1,8 +1,11 @@
 
-from tkinter import (Tk, Frame, )
+from tkinter import (Tk, Frame)
 
-from Screens import RuleScreenClass as rules, OptionScreenClass as options, GameScreenClass as games, \
-    TitleScreenClass as titles
+from Screens import (RuleScreenClass as rules,
+                     OptionScreenClass as options,
+                     GameScreenClass as games,
+                     TitleScreenClass as titles
+                     )
 
 
 class GUI(Tk):

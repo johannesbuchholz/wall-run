@@ -2,22 +2,22 @@
 from numpy import inf
 
 
-def replace_hex_color(str, color):
+def replace_hex_color(string, col):
     """
     Given a string this function finds all occurences of hex color strings like "#ff00ff" and replaces them
     by the given color string.
 
-    :param str: string, expects that only hex colors start with an "#".
+    :param string: string, expects that only hex colors start with an "#".
     :return: string, resulting string
     """
     out = ""
     i = 0;
-    while i < len(str):
-        if str[i] == "#":
-            out += color
+    while i < len(string):
+        if string[i] == "#":
+            out += col
             i += 7
         else:
-            out += str[i]
+            out += string[i]
             i += 1
     return out
 
@@ -38,7 +38,7 @@ def get_rectangle_corners(point_set):
     x = -1
     y = -1
     for p, q in point_set:
-        assert p >= 0 and q >= 0, "Only positive values are allowed but got ({}, {}).".format(p, q)
+        #  assert p >= 0 and q >= 0, "Only positive values are allowed but got ({}, {}).".format(p, q)
         if p < a:
             a = p
         if q < b:

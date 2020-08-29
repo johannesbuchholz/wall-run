@@ -1,5 +1,7 @@
 
-from tkinter import *
+from tkinter import (Frame, Label, Button, Entry, IntVar, Radiobutton, PhotoImage,
+                     TOP,
+                     )
 from pynput import keyboard
 from FieldObjects import PlayerClass as pc
 

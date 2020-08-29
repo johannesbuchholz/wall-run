@@ -11,25 +11,17 @@ class Player:
     def __init__(self, name, color, keys={"left": keyboard.Key.left, "right": keyboard.Key.right}, alive=True,
                  speed=SPEED_NORMAL, size=SIZE_NORMAL, flying=False, pos=(100, 100), angle=0):
         """
-        Initialises all attributes. These are
+        Initialises all attributes.
+        Additional information on certain fields:
             name: string,
-            color: string
-            control keys: {left:, right:}
-            status related:
-                alive: bool,
-                speed: int,
-                size: int (radius of the dot in pixels),
-                flying: bool
-            movement related:
-                position: (int, int)
-                angle: facing angle as int within [0, 360), 0 is facing east, 90 is facing north etc
-                turn_rate: angle difference possible per tick (int from [0, 359])
-            wins: number of won rounds.
-        The listener is started by calling
-            listener.start()
-            listener.join() # Optional
-        One can create a new listener by calling make_listener.
-        which starts a blocking thread monitoring the keyboard. Stop the Listener by calling stop().
+            color: string, matching a python color string.
+            keys: dict with keys "left" and "right" mapping to pynput.keyboard.Key.
+            alive: bool,
+            speed: int,
+            size: int (radius of the dot in pixels),
+            flying: bool
+            position: (int, int)
+            angle: facing angle as int within [0, 360), 0 is facing east, 90 is facing north etc
         """
         # ATTRIBUTES
         # Basic
@@ -44,17 +36,17 @@ class Player:
         self.speed = speed
         self.size = size
         self.flying = flying
-        self.turn_rate = RATE_NORMAL
+        self.turn_rate = RATE_NORMAL  # Angle the player can turn each tick (int from [0, 359])
 
         # Positional
         self.pos = pos
         self.angle = angle
 
         self.dot_trace = None  # Will be defined during put_players and move in the GameScreen Class.
-        self.data_strings = None  # Used for efficiently drawing the player's dot-trace
-        self.rect_corners = None  # Used for efficiently drawing the player's dot-trace
+        self.data_strings = None  # Used for efficiently drawing the player's dot-trace.
+        self.rect_corners = None  # Used for efficiently drawing the player's dot-trace.
         self.collision_head = []  # Defined during the call of self.compute_collision_head.
-        self.base_tolerance = 6  # Higher values mean more tolerance heads (also longer tick-processing)
+        self.head_tolerance_count = 4  # Number of latest player positions that do not count for collision.
         self.tolerance_heads = []  # Stores the last self.tolerance_count dot_traces
 
         # FUNCTIONAL ATTRIBUTES
@@ -68,9 +60,8 @@ class Player:
 
         :return:
         """
-        tolerance_count = max(1, int(self.base_tolerance / self.speed))
         self.tolerance_heads.append(self.dot_trace)
-        if len(self.tolerance_heads) > tolerance_count:
+        if len(self.tolerance_heads) > self.head_tolerance_count:
             self.tolerance_heads.__delitem__(0)
 
     def compute_collision_head(self):
@@ -81,9 +72,14 @@ class Player:
 
         The result of this computation is saved in self.collision_head as a list of tuple of size of int 2.
 
-        :return:
+        :return: None.
         """
-        v1, v2 = cos(radians(self.angle)), sin(radians(self.angle))
+        current_facing_angle = self.angle
+        if self.move_command == DIR_LEFT:
+            current_facing_angle += self.turn_rate
+        elif self.move_command == DIR_LEFT:
+            current_facing_angle -= self.turn_rate
+        v1, v2 = cos(radians(current_facing_angle)), sin(radians(current_facing_angle))
         p, q = self.pos
         self.collision_head = [(x, y) for (x, y) in self.dot_trace if (x-p)*v1+(y-q)*v2 >= 0]
 

@@ -3,7 +3,8 @@ from importlib import import_module
 from numpy import sin, cos, radians, zeros, ones
 from numpy.random import default_rng
 from threading import Thread
-from tkinter import *
+from tkinter import (Frame, Canvas, PhotoImage, Label, Button,
+                     CENTER, DISABLED, NORMAL, NW, LEFT)
 from time import sleep
 from timeit import default_timer
 from pynput import keyboard
@@ -133,168 +134,9 @@ class GameScreen(Frame):
         # -- Listeners for space bar
         self.listener_space = None
 
-    def remove_item(self, item_id):
-        """
-        Removes an item from the field by its round specific id, both visually and effectively.
-
-        :param item_id: int, id of the item to remove. Needs to be present in self..items_spawned.
-        :return: triple (removed item instance, item icon, pos)
-        """
-        item_to_remove, icon, pos = self.items_spawned.pop(item_id)
-        x, y = pos
-        self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = 0
-        return item_to_remove, icon, pos
-
-    def create_item_by_name(self, name):
-        """
-        Creates a random item instance among all registered items and returns it.
-
-        :param name: string, name of the item-class
-        :return: Item instance of given class name.
-        """
-
-        item_module = import_module("FieldObjects.Items." + name)
-        item_class = getattr(item_module, name)
-        return item_class(self.controller, self)
-
-    def place_item(self, name, pos):
-        """
-        Places the item identified by name on the game field at pos. This function also draws the item on the canvas
-        and removes the oldest item on the field, if the maximum number of items is reached.
-
-        :param name: String, Class name of the item to place.
-        :param pos: Tuple of size 2 of int, position on the game field to place the item.
-        :return: None
-        """
-        # -- Create and store item
-        item_to_place = self.create_item_by_name(name)
-        icon = PhotoImage(file=item_to_place.image_path)
-        self.items_spawned[self.item_id] = (item_to_place, icon, pos)
-        # -- Place item on the field
-        # visually
-        x, y = pos
-        offset = (self.controller.canvas_size - self.controller.field_size)/2  # Offset between canvas and game field.
-        self.canvas.create_image(offset + x, offset + y, image=icon, anchor=NW)  # Icon is put un CANVAS not field
-        # effectively
-        self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = self.item_id
-        # -- Increase item item_id
-        self.item_id = self.item_id + 1
-
-    def make_listener(self, act):
-        """
-        Makes a listener for the space key to init or start or pause a round. It also stops the old listener.
-
-        :param act: string, type of action the listener should have (use "init". "go" or "pause").
-        :return: None
-        """
-        self.turn_off_space_listener()
-        if act == "go":
-            def on_press(key):
-                if key == keyboard.Key.space:
-                    self.start_round()
-                    return False
-            self.listener_space = keyboard.Listener(on_press=on_press)
-        elif act == "init":
-            def on_press(key):
-                if key == keyboard.Key.space:
-                    self.initialise_new_round()
-                    return False
-            self.listener_space = keyboard.Listener(on_press=on_press)
-        elif act == "pause":
-            def on_press(key):
-                if key == keyboard.Key.space:
-                    self.pause_round()
-                    return False
-            self.listener_space = keyboard.Listener(on_press=on_press)
-
-    def initiate_canvas(self):
-        self.walls = zeros((self.controller.field_size, self.controller.field_size))
-        self.canvas.destroy()
-        self.canvas = Canvas(master=self,
-                             width=self.controller.canvas_size,
-                             height=self.controller.canvas_size,
-                             bg="Black",
-                             )
-        self.canvas.grid(row=0, column=0, columnspan=10, rowspan=10, padx=5, pady=5)
-
-        self.field_image = PhotoImage(width=self.controller.field_size,
-                                      height=self.controller.field_size,
-                                      )
-
-        self.canvas.create_image((self.controller.canvas_size / 2, self.controller.canvas_size / 2),
-                                 image=self.field_image,
-                                 anchor=CENTER,
-                                 )
-
-        self.toggle_border(on=True)
-        self.display_border()
-
-    def clear_walls(self):
-        """
-        Removes all walls but the border. Visually and effectively.
-
-        :return: None
-        """
-        # visually
-        self.field_image.put(data="Black", to=(1, 1, self.controller.field_size-1, self.controller.field_size-1))
-        # effectively
-        self.walls[1:-1, 1:-1] = 0
-
-    def display_border(self, on=True):
-        """
-        Updates the visuals for the surrounding walls.
-
-        :param on: boolean, True means that walls are displayed as "on" or present, and absent otherwise (default True).
-        :return: None
-        """
-        if on:
-            color = "White"
-        else:
-            color = "Black"
-        # left border
-        self.field_image.put(data=color, to=(0, 0, 1, self.controller.field_size))
-        # top border
-        self.field_image.put(data=color, to=(0, 0, self.controller.field_size, 1))
-        # right border
-        self.field_image.put(data=color, to=(0, self.controller.field_size-1,
-                                             self.controller.field_size-1, self.controller.field_size))
-        # bottom border
-        self.field_image.put(data=color, to=(self.controller.field_size-1, 0,
-                                             self.controller.field_size, self.controller.field_size))
-
-    def display_ranking(self):
-        """
-        Displays the player names and their points in descending order on the game screen.
-
-        :return: None
-        """
-
-        for lab_n, lab_p in self.player_labels:
-            lab_n.destroy()
-            lab_p.destroy()
-
-        row = 4
-        # get sorted list of player wins in descending order
-        scores = list(self.controller.players)
-        scores.sort(key=lambda p: p.wins, reverse=True)
-        for p in scores:
-            # Name
-            lab_name = Label(master=self,
-                             font=self.controller.font_basic,
-                             text=p.name,
-                             fg=p.color,
-                             )
-            lab_name.grid(row=row, column=10, columnspan=2)
-            # Points
-            lab_points = Label(master=self,
-                               font=self.controller.font_basic,
-                               text=p.wins,
-                               fg=p.color,
-                               justify=LEFT
-                               )
-            lab_points.grid(row=row, column=12, columnspan=1)
-            self.player_labels.append((lab_name, lab_points))
-            row += 1
+    # ########################################
+    # Player related functions
+    # ########################################
 
     def place_player(self, p, pos=None, angle=None):
         """
@@ -351,64 +193,142 @@ class GameScreen(Frame):
         # self.put_trace(trace=p.dot_trace, color="White")
         self.field_image.put(data=p.data_strings[0].replace(p.color, "White"), to=p.rect_corners[0])
 
-    def toggle_border(self, on=True):
+    # ########################################
+    # Item related functions
+    # ########################################
+
+    def remove_item(self, item_id):
         """
-        Toggles surrounding walls in numpy array on and off. No visual effect is applied.
-        :param on: boolean, If True, walls are turned on. Off otherwise.
+        Removes an item from the field by its round specific id, both visually and effectively.
+
+        :param item_id: int, id of the item to remove. Needs to be present in self..items_spawned.
+        :return: triple (removed item instance, item icon, pos)
+        """
+        item_to_remove, icon, pos = self.items_spawned.pop(item_id)
+        x, y = pos
+        self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = 0
+        return item_to_remove, icon, pos
+
+    def create_item_by_name(self, name):
+        """
+        Creates a random item instance among all registered items and returns it.
+
+        :param name: string, name of the item-class
+        :return: Item instance of given class name.
+        """
+
+        item_module = import_module("FieldObjects.Items." + name)
+        item_class = getattr(item_module, name)
+        return item_class(self.controller, self)
+
+    def place_item(self, name, pos):
+        """
+        Places the item identified by name on the game field at pos. This function also draws the item on the canvas
+        and removes the oldest item on the field, if the maximum number of items is reached.
+
+        :param name: String, Class name of the item to place.
+        :param pos: Tuple of size 2 of int, position on the game field to place the item.
+        :return: None
+        """
+        # -- Create and store item
+        item_to_place = self.create_item_by_name(name)
+        icon = PhotoImage(file=item_to_place.image_path)
+        self.items_spawned[self.item_id] = (item_to_place, icon, pos)
+        # -- Place item on the field
+        # visually
+        x, y = pos
+        offset = (self.controller.canvas_size - self.controller.field_size)/2  # Offset between canvas and game field.
+        self.canvas.create_image(offset + x, offset + y, image=icon, anchor=NW)  # Icon is put un CANVAS not field
+        # effectively
+        self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = self.item_id
+        # -- Increase item item_id
+        self.item_id = self.item_id + 1
+
+    # ########################################
+    # Canvas and window related functions
+    # ########################################
+
+    def display_ranking(self):
+        """
+        Displays the player names and their points in descending order on the game screen.
+
+        :return: None
+        """
+
+        for lab_n, lab_p in self.player_labels:
+            lab_n.destroy()
+            lab_p.destroy()
+
+        row = 4
+        # get sorted list of player wins in descending order
+        scores = list(self.controller.players)
+        scores.sort(key=lambda p: p.wins, reverse=True)
+        for p in scores:
+            # Name
+            lab_name = Label(master=self,
+                             font=self.controller.font_basic,
+                             text=p.name,
+                             fg=p.color,
+                             )
+            lab_name.grid(row=row, column=10, columnspan=2)
+            # Points
+            lab_points = Label(master=self,
+                               font=self.controller.font_basic,
+                               text=p.wins,
+                               fg=p.color,
+                               justify=LEFT
+                               )
+            lab_points.grid(row=row, column=12, columnspan=1)
+            self.player_labels.append((lab_name, lab_points))
+            row += 1
+
+    def initiate_canvas(self):
+        self.walls = zeros((self.controller.field_size, self.controller.field_size))
+        self.canvas.destroy()
+        self.canvas = Canvas(master=self,
+                             width=self.controller.canvas_size,
+                             height=self.controller.canvas_size,
+                             bg="Black",
+                             )
+        self.canvas.grid(row=0, column=0, columnspan=10, rowspan=10, padx=5, pady=5)
+
+        self.field_image = PhotoImage(width=self.controller.field_size,
+                                      height=self.controller.field_size,
+                                      )
+
+        self.canvas.create_image((self.controller.canvas_size / 2, self.controller.canvas_size / 2),
+                                 image=self.field_image,
+                                 anchor=CENTER,
+                                 )
+
+        self.toggle_border(on=True)
+        self.display_border()
+
+    def display_border(self, on=True):
+        """
+        Updates the visuals for the surrounding walls.
+
+        :param on: boolean, True means that walls are displayed as "on" or present, and absent otherwise (default True).
         :return: None
         """
         if on:
-            self.walls[0, :] = -ones(self.controller.field_size)
-            self.walls[-1, :] = -ones(self.controller.field_size)
-            self.walls[:, 0] = -ones(self.controller.field_size)
-            self.walls[:, -1] = -ones(self.controller.field_size)
+            color = "White"
         else:
-            self.walls[0, :] = zeros(self.controller.field_size)
-            self.walls[-1, :] = zeros(self.controller.field_size)
-            self.walls[:, 0] = zeros(self.controller.field_size)
-            self.walls[:, -1] = zeros(self.controller.field_size)
+            color = "Black"
+        # left border
+        self.field_image.put(data=color, to=(0, 0, 1, self.controller.field_size))
+        # top border
+        self.field_image.put(data=color, to=(0, 0, self.controller.field_size, 1))
+        # right border
+        self.field_image.put(data=color, to=(0, self.controller.field_size-1,
+                                             self.controller.field_size-1, self.controller.field_size))
+        # bottom border
+        self.field_image.put(data=color, to=(self.controller.field_size-1, 0,
+                                             self.controller.field_size, self.controller.field_size))
 
-    def put_trace_by_function(self, func, rect):
-        """
-        This function draws color values given by the function func to a rectangle onto field_image.
-        It cycles through every pixel of the rectangle calls func on it to determine the color of that pixel.
-        The pixels coordinates are also forced to point on the field (modulo self.controller.field_size)
-
-        This should perform better than 'put_trace' for each pixel in the players dot trace.
-        See https://stackoverflow.com/questions/10417524/why-is-photoimage-put-slow for more info why this is faster.
-
-        Use '#{:02x}{:02x}{:02x}'.format(*self.field_image.get(i, j)) in case of extracting a color from the field.
-
-        :param func: Python function, tuple of size two of int -> color value (string or hex).
-        :param rect: Tuple of size 4 of int defining upper left and lower right point of the rectangle.
-        :return: None
-        """
-
-        a, b, x, y = rect
-
-        # create data string.
-        # Roll through every pixel of the square from (x-p.size, y-p.size) to (x+p.size, y+p.size) and decide its color.
-        data_string = ""
-        for i in range(a, x+1):  # x-axis roll-through
-            data_string += "{"
-            for j in range(b, y+1):  # y-axis roll-through
-                data_string += func(i, j) + " "
-            data_string += "} "
-        self.field_image.put(data=data_string, to=rect)
-
-    def put_trace(self, trace, color):
-        """
-        Displays a trace of pixels on the canvas. One may have to update the tk mainloop.
-
-        :param trace: list of tuple of size 2 of int or single tuple of size two.
-        :param color: string
-        :return:
-        """
-        if type(trace) is list:
-            for pos in trace:
-                self.field_image.put(color, pos)
-        else:
-            self.field_image.put(data=color, to=trace)
+    # ########################################
+    # Movement and functional functions
+    # ########################################
 
     def dot_trace(self, pos, r):
         """
@@ -536,6 +456,98 @@ class GameScreen(Frame):
                                      )
         return way_trace
 
+    def toggle_border(self, on=True):
+        """
+        Toggles surrounding walls in numpy array on and off. No visual effect is applied.
+
+        :param on: boolean, If True, walls are turned on. Off otherwise.
+        :return: None
+        """
+        if on:
+            self.walls[0, :] = -ones(self.controller.field_size)
+            self.walls[-1, :] = -ones(self.controller.field_size)
+            self.walls[:, 0] = -ones(self.controller.field_size)
+            self.walls[:, -1] = -ones(self.controller.field_size)
+        else:
+            self.walls[0, :] = zeros(self.controller.field_size)
+            self.walls[-1, :] = zeros(self.controller.field_size)
+            self.walls[:, 0] = zeros(self.controller.field_size)
+            self.walls[:, -1] = zeros(self.controller.field_size)
+
+    # ########################################
+    # Listener functions
+    # ########################################
+
+    def make_listener(self, act):
+        """
+        Makes a listener for the space key to init or start or pause a round. It also stops the old listener.
+
+        :param act: string, type of action the listener should have (use "init". "go" or "pause").
+        :return: None
+        """
+        self.turn_off_space_listener()
+        if act == "go":
+            def on_press(key):
+                if key == keyboard.Key.space:
+                    self.start_round()
+                    return False
+            self.listener_space = keyboard.Listener(on_press=on_press)
+        elif act == "init":
+            def on_press(key):
+                if key == keyboard.Key.space:
+                    self.initialise_new_round()
+                    return False
+            self.listener_space = keyboard.Listener(on_press=on_press)
+        elif act == "pause":
+            def on_press(key):
+                if key == keyboard.Key.space:
+                    self.pause_round()
+                    return False
+            self.listener_space = keyboard.Listener(on_press=on_press)
+
+    def turn_off_space_listener(self):
+        """
+        Turns of the game-screen owned listener listener_space.
+        :return: None
+        """
+        try:
+            self.listener_space.stop()
+            self.listener_space.join()
+        except AttributeError:
+            pass
+        except RuntimeError:  # If thread not started yet
+            pass
+
+    def turn_off_player_listeners(self):
+        """
+        This function turns off all player listeners (movement controls) and resets their facing-directions.
+
+        :return:
+        """
+        for p in self.controller.players:
+            p.move_command = DIR_STRAIGHT
+            try:
+                p.listener.stop()
+                p.listener.join()
+            except AttributeError:
+                pass
+            except RuntimeError:  # If thread not started yet
+                pass
+
+    def turn_off_all_listeners(self):
+        """
+        This function turns of all player control-listeners and pause-listeners.
+
+        :return: None
+        """
+        # Player listeners
+        self.turn_off_player_listeners()
+        self.turn_off_space_listener()
+
+    # ########################################
+    # Meta / button functions
+    # ########################################
+
     def set_buttons(self, state):
         """
         Sets the buttons on the window according to the given state.
@@ -614,45 +626,6 @@ class GameScreen(Frame):
         # Clear info message
         self.label_info.config(text="")
 
-    def turn_off_space_listener(self):
-        """
-        Turns of the game-screen owned listener listener_space.
-        :return: None
-        """
-        try:
-            self.listener_space.stop()
-            self.listener_space.join()
-        except AttributeError:
-            pass
-        except RuntimeError:  # If thread not started yet
-            pass
-
-    def turn_off_player_listeners(self):
-        """
-        This function turns off all player listeners (movement controls) and resets their facing-directions.
-
-        :return:
-        """
-        for p in self.controller.players:
-            p.move_command = DIR_STRAIGHT
-            try:
-                p.listener.stop()
-                p.listener.join()
-            except AttributeError:
-                pass
-            except RuntimeError:  # If thread not started yet
-                pass
-
-    def turn_off_all_listeners(self):
-        """
-        This function turns of all player control-listeners and pause-listeners.
-
-        :return: None
-        """
-        # Player listeners
-        self.turn_off_player_listeners()
-        self.turn_off_space_listener()
-
     def pause_round(self):
         """
         Stops the move jobs and all player movement listeners and activates buttons in order to restart the round again.
@@ -671,6 +644,10 @@ class GameScreen(Frame):
         self.reset_all_items()
         self.controller.show_frame("Title")
 
+    # ########################################
+    # Ticker functions
+    # ########################################
+
     def ticker(self):
         """
         Collects all jobs that have to be done every tick.
@@ -684,11 +661,11 @@ class GameScreen(Frame):
             # print("Current Tick:", self.tick_count)
             self.tick_count += 1
             # #### old_traces = self.move()
-            old_traces = self.move_v2()
+            old_traces = self.move()
             move = default_timer()
             # print("Time for move:", move - start)
             # #### self.update_visuals(old_traces)
-            self.update_visuals_v2(old_traces)
+            self.update_visuals(old_traces)
             self.check_events()
             if self.check_round_end():
                 self.running = False
@@ -702,138 +679,13 @@ class GameScreen(Frame):
                 self.label_info.config(text="The tick processing took longer\n "
                                             "than the given tick rate!\n Game is paused.",
                                        fg="black")
-            else:
-                first_loop = False
+            first_loop = False
             # print("Sleep length:", self._interval-(update-start))
             sleep(max([0, self._interval-(update-start)]))
             end = default_timer()
             # print("Tick length:", end - start, "\n==============")
 
-    def reset_all_items(self):
-        """
-        Clears all items from the game field, deactivates all running effects and resets the item variables.
-        :return: None
-        """
-        # -- Clean up item variables
-        self.item_id = 1
-        for tup in self.items_active:
-            item, _ = tup
-            item.deactivate()
-        self.items_spawned = {}
-        self.items_active = []
-        self.items = zeros((self.controller.field_size, self.controller.field_size), dtype="int")
-
-    def solve_round_end(self):
-        """
-        This function wraps up the task when a round ends by either one or no player surviving. This includes:
-            1. Award the winner, if there is one.
-            2. Check for game end and solve that accordingly.
-                -> Prepare everything for the next round/game.
-        :return: None
-        """
-        # -- Award Winner
-        self.award_winner()
-        # -- Check game end
-        if self.check_game_end():
-            self.set_buttons(state="off")
-            game_winner = sorted(self.controller.players, key=lambda p: p.wins)[-1]
-            self.label_info.config(text=str(game_winner.name) + "\nwins the game.\n Congratulations!")
-        else:
-            self.set_buttons(state="init")
-
-    def check_round_end(self):
-        """
-        This function returns true, if the current round is over, meaning one ore no players are left alive unless
-        it is a practice game. In that case the round only ends when no player is alive.
-
-        :return: bool, True if round is over, False otherwise.
-        """
-        players_alive = [p for p in self.controller.players if p.alive]
-        if len(players_alive) <= 1 and not self.practice_game:
-            return True
-        elif len(players_alive) == 0 and self.practice_game:
-            return True
-        else:
-            return False
-
-    def award_winner(self):
-        """
-        This function checks if the round is over and awards the winner of the round, if there is one.
-        It also updates the leaderboard and displays a text naming the winning player.
-        This function does nothing, if the round is not yet decided.
-
-        :return: None
-        """
-
-        players_alive = [p for p in self.controller.players if p.alive]
-        if len(players_alive) > 1:
-            # Not decided
-            return
-        elif len(players_alive) == 0:
-            # Draw
-            self.label_info.config(text="Nobody wins\nround number " + str(self.current_round) + ".", fg="Black")
-            return
-        else:
-            winner = players_alive[-1]
-            winner.wins += 1
-            # Update labels
-            self.display_ranking()
-            self.label_info.config(text=winner.name + "\nwins round number " + str(self.current_round) + ".",
-                                   fg=winner.color)
-
-    def check_game_end(self):
-        """
-        This function returns True if the current game is decided, meaning that one player has the maximum amount of
-        required wins.
-
-        :return: bool, True if teh game is over, False otherwise.
-        """
-
-        players_sorted = sorted(self.controller.players, key=lambda p: p.wins)  # ascending
-        if len(players_sorted) > 0 and players_sorted[-1].wins >= self.max_wins:
-            return True
-        else:
-            return False
-
     def move(self):
-        """
-        This function moves every player by one step according to their current position, speed, angle and
-        move command. It also updates the walls with the way traces and returns a list of all the old player positions.
-
-        :return: dict of list of tuple of int of size 2.
-        """
-        old_way_traces = {}
-        for p in self.controller.players:
-            if not p.alive:
-                continue
-            if p.move_command == DIR_LEFT:
-                p.angle = (p.angle - p.turn_rate) % 360
-                player_moved_straight = False
-            elif p.move_command == DIR_RIGHT:
-                p.angle = (p.angle + p.turn_rate) % 360
-                player_moved_straight = False
-            # compute new position
-            p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
-            player_moved_straight = True
-
-            # reset move_command if players turn rate is set to RATE_RIGHT_ANGLE.
-            if p.turn_rate == RATE_RIGHT_ANGLE:
-                p.move_command = DIR_STRAIGHT
-
-            # update new dot trace
-            old_dot_trace = p.dot_trace
-            old_way_traces[p] = old_dot_trace
-            p.dot_trace = self.dot_trace(pos=p.pos, r=p.size)  # new dot trace at new position
-
-            # update walls if...
-            if (self.tick_count % self.gap_rate > self.gap_length  # it is not a tick where gaps are drawn &&
-                    and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT a 90 degree turn &&
-                    and not p.flying):  # player is not flying.
-                for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
-                    self.walls[pix] = -1
-        return old_way_traces
-
-    def move_v2(self):
         """
         This function moves every player by one step according to their current position, speed, angle and
         move command. It also updates the walls with the way traces and returns a list of all the old player positions.
@@ -910,32 +762,7 @@ class GameScreen(Frame):
             y_rand = self.rng.integers(ITEMSIZE, self.controller.field_size-ITEMSIZE)
             self.place_item(name=self.rng.choice(self.controller.item_names), pos=(x_rand, y_rand))
 
-    def update_visuals(self, old_traces):
-        """
-        Draws the current position of each player on the canvas.
-
-        :param old_traces: list of list of tuple of size 2, representing the pixels of each players old position.
-        :return: None
-        """
-        # Draw player traces and dots.
-        for p in self.controller.players:
-            if not p.alive:
-                continue
-            old_trace = old_traces[p]
-            # draw old position if player is alive and not flying
-            if self.tick_count % self.gap_rate > self.gap_length and not p.flying:
-                self.put_trace(trace=old_trace, color=p.color)
-            else:
-                self.put_trace(trace=old_trace, color="Black")  # Override the previously drawn white head
-            # draw new player head
-            if p.flying and self.tick_count % 4 in [2, 3]:
-                # Player is flying. Do not print every 3rd and 4th head position.
-                pass
-            else:
-                # Player is not flying. Print head as usual.
-                self.put_trace(trace=p.dot_trace, color="White")
-
-    def update_visuals_v2(self, old_data_strings_rect_corners):
+    def update_visuals(self, old_data_strings_rect_corners):
         """
         Draws the current position of each player on the canvas.
         """
@@ -961,3 +788,215 @@ class GameScreen(Frame):
                 for data_string, rect_corners in zip(p.data_strings, p.rect_corners):
                     self.field_image.put(data=data_string.replace(p.color, "White"),
                                          to=rect_corners)
+
+            self.put_trace(trace=p.collision_head, color="Cyan")
+
+    # ########################################
+    # Helper functions
+    # ########################################
+
+    def clear_walls(self):
+        """
+        Removes all walls but the border. Visually and effectively.
+
+        :return: None
+        """
+        # visually
+        self.field_image.put(data="Black", to=(1, 1, self.controller.field_size-1, self.controller.field_size-1))
+        # effectively
+        self.walls[1:-1, 1:-1] = 0
+
+    def put_trace(self, trace, color):
+        """
+        Displays a trace of pixels on the canvas. One may have to update the tk mainloop.
+
+        :param trace: list of tuple of size 2 of int or single tuple of size two.
+        :param color: string
+        :return:
+        """
+        if type(trace) is list:
+            for pos in trace:
+                self.field_image.put(color, pos)
+        else:
+            self.field_image.put(data=color, to=trace)
+
+    def solve_round_end(self):
+        """
+        This function wraps up the task when a round ends by either one or no player surviving. This includes:
+            1. Award the winner, if there is one.
+            2. Check for game end and solve that accordingly.
+                -> Prepare everything for the next round/game.
+        :return: None
+        """
+        # -- Award Winner
+        self.award_winner()
+        # -- Check game end
+        if self.check_game_end():
+            self.set_buttons(state="off")
+            game_winner = sorted(self.controller.players, key=lambda p: p.wins)[-1]
+            self.label_info.config(text=str(game_winner.name) + "\nwins the game.\n Congratulations!")
+        else:
+            self.set_buttons(state="init")
+
+    def check_round_end(self):
+        """
+        This function returns true, if the current round is over, meaning one ore no players are left alive unless
+        it is a practice game. In that case the round only ends when no player is alive.
+
+        :return: bool, True if round is over, False otherwise.
+        """
+        players_alive = [p for p in self.controller.players if p.alive]
+        if len(players_alive) <= 1 and not self.practice_game:
+            return True
+        elif len(players_alive) == 0 and self.practice_game:
+            return True
+        else:
+            return False
+
+    def award_winner(self):
+        """
+        This function checks if the round is over and awards the winner of the round, if there is one.
+        It also updates the leaderboard and displays a text naming the winning player.
+        This function does nothing, if the round is not yet decided.
+
+        :return: None
+        """
+
+        players_alive = [p for p in self.controller.players if p.alive]
+        if len(players_alive) > 1:
+            # Not decided
+            return
+        elif len(players_alive) == 0:
+            # Draw
+            self.label_info.config(text="Nobody wins\nround number " + str(self.current_round) + ".", fg="Black")
+            return
+        else:
+            winner = players_alive[-1]
+            winner.wins += 1
+            # Update labels
+            self.display_ranking()
+            self.label_info.config(text=winner.name + "\nwins round number " + str(self.current_round) + ".",
+                                   fg=winner.color)
+
+    def check_game_end(self):
+        """
+        This function returns True if the current game is decided, meaning that one player has the maximum amount of
+        required wins.
+
+        :return: bool, True if teh game is over, False otherwise.
+        """
+
+        players_sorted = sorted(self.controller.players, key=lambda p: p.wins)  # ascending
+        if len(players_sorted) > 0 and players_sorted[-1].wins >= self.max_wins:
+            return True
+        else:
+            return False
+
+    def reset_all_items(self):
+        """
+        Clears all items from the game field, deactivates all running effects and resets the item variables.
+        :return: None
+        """
+        # -- Clean up item variables
+        self.item_id = 1
+        for tup in self.items_active:
+            item, _ = tup
+            item.deactivate()
+        self.items_spawned = {}
+        self.items_active = []
+        self.items = zeros((self.controller.field_size, self.controller.field_size), dtype="int")
+
+    # ########################################
+    # Deprecated / legacy functions
+    # ########################################
+
+    def _update_visuals_deprecated(self, old_traces):
+        """
+        Draws the current position of each player on the canvas.
+
+        :param old_traces: list of list of tuple of size 2, representing the pixels of each players old position.
+        :return: None
+        """
+        # Draw player traces and dots.
+        for p in self.controller.players:
+            if not p.alive:
+                continue
+            old_trace = old_traces[p]
+            # draw old position if player is alive and not flying
+            if self.tick_count % self.gap_rate > self.gap_length and not p.flying:
+                self.put_trace(trace=old_trace, color=p.color)
+            else:
+                self.put_trace(trace=old_trace, color="Black")  # Override the previously drawn white head
+            # draw new player head
+            if p.flying and self.tick_count % 4 in [2, 3]:
+                # Player is flying. Do not print every 3rd and 4th head position.
+                pass
+            else:
+                # Player is not flying. Print head as usual.
+                self.put_trace(trace=p.dot_trace, color="White")
+
+    def _move_deprecated(self):
+        """
+        This function moves every player by one step according to their current position, speed, angle and
+        move command. It also updates the walls with the way traces and returns a list of all the old player positions.
+
+        :return: dict of list of tuple of int of size 2.
+        """
+        old_way_traces = {}
+        for p in self.controller.players:
+            if not p.alive:
+                continue
+            if p.move_command == DIR_LEFT:
+                p.angle = (p.angle - p.turn_rate) % 360
+                player_moved_straight = False
+            elif p.move_command == DIR_RIGHT:
+                p.angle = (p.angle + p.turn_rate) % 360
+                player_moved_straight = False
+            # compute new position
+            p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
+            player_moved_straight = True
+
+            # reset move_command if players turn rate is set to RATE_RIGHT_ANGLE.
+            if p.turn_rate == RATE_RIGHT_ANGLE:
+                p.move_command = DIR_STRAIGHT
+
+            # update new dot trace
+            old_dot_trace = p.dot_trace
+            old_way_traces[p] = old_dot_trace
+            p.dot_trace = self.dot_trace(pos=p.pos, r=p.size)  # new dot trace at new position
+
+            # update walls if...
+            if (self.tick_count % self.gap_rate > self.gap_length  # it is not a tick where gaps are drawn &&
+                    and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT a 90 degree turn &&
+                    and not p.flying):  # player is not flying.
+                for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
+                    self.walls[pix] = -1
+        return old_way_traces
+
+    def put_trace_by_function(self, func, rect):
+        """
+        This function draws color values given by the function func to a rectangle onto field_image.
+        It cycles through every pixel of the rectangle calls func on it to determine the color of that pixel.
+        The pixels coordinates are also forced to point on the field (modulo self.controller.field_size)
+
+        This should perform better than 'put_trace' for each pixel in the players dot trace.
+        See https://stackoverflow.com/questions/10417524/why-is-photoimage-put-slow for more info why this is faster.
+
+        Use '#{:02x}{:02x}{:02x}'.format(*self.field_image.get(i, j)) in case of extracting a color from the field.
+
+        :param func: Python function, tuple of size two of int -> color value (string or hex).
+        :param rect: Tuple of size 4 of int defining upper left and lower right point of the rectangle.
+        :return: None
+        """
+
+        a, b, x, y = rect
+
+        # create data string.
+        # Roll through every pixel of the square from (x-p.size, y-p.size) to (x+p.size, y+p.size) and decide its color.
+        data_string = ""
+        for i in range(a, x+1):  # x-axis roll-through
+            data_string += "{"
+            for j in range(b, y+1):  # y-axis roll-through
+                data_string += func(i, j) + " "
+            data_string += "} "
+        self.field_image.put(data=data_string, to=rect)
