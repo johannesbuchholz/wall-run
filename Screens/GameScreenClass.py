@@ -72,7 +72,7 @@ class GameScreen(Frame):
         self.label_title.grid(row=0, column=10, columnspan=3)
 
         # -- Game buttons
-        button_setting = {"width": int(3 * controller.scale),
+        button_setting = {"width": int(6 * controller.scale),
                           "height": int(2 * controller.scale),
                           "font": controller.font_basic,
                           }
@@ -676,8 +676,7 @@ class GameScreen(Frame):
             # print("Time for update:", update - move)
             if not first_loop and self._interval-(update-start) < 0:
                 self.pause_round()
-                self.label_info.config(text="The tick processing took longer\n "
-                                            "than the given tick rate!\n Game is paused.",
+                self.label_info.config(text="The tick processing\ntook too long!\nGame is paused.",
                                        fg="black")
             first_loop = False
             # print("Sleep length:", self._interval-(update-start))
@@ -788,8 +787,6 @@ class GameScreen(Frame):
                 for data_string, rect_corners in zip(p.data_strings, p.rect_corners):
                     self.field_image.put(data=data_string.replace(p.color, "White"),
                                          to=rect_corners)
-
-            self.put_trace(trace=p.collision_head, color="Cyan")
 
     # ########################################
     # Helper functions

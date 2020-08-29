@@ -33,9 +33,9 @@ class GUI(Tk):
 
         # font related
         self.font_basic = ("Sans", int(12 * self.scale))
-        self.font_medium = ("Sans", int(18 * self.scale))
-        self.font_big = ("Sans", int(24 * self.scale))
-        self.font_bigger = ("Sans", int(32 * self.scale))
+        self.font_medium = ("Sans", int(16 * self.scale))
+        self.font_big = ("Sans", int(26 * self.scale))
+        self.font_bigger = ("Sans", int(38 * self.scale))
 
         # Screen initialisation
         Tk.__init__(self)

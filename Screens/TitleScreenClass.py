@@ -34,7 +34,7 @@ class TitleScreen(Frame):
 
         button_setting = {"width": int(12 * controller.scale),
                           "height": int(3 * controller.scale),
-                          "font": controller.font_basic,
+                          "font": controller.font_medium,
                           }
 
         Button(master=self,
