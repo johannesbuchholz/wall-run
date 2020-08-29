@@ -340,7 +340,7 @@ class GameScreen(Frame):
         # get wall trace
         tail_len = 12
         tail_trace = self.way_trace(dot_trace=p.dot_trace, dist=tail_len,
-                                    angle=(p.angle+180) % 360, sparse=int(p.size/2)
+                                    angle=(p.angle+180) % 360, sparse=max(1, int(p.size/2))
                                     )
         # update walls
         for c in [x for x in tail_trace if x not in p.dot_trace]:  # prevent crash with own way trace
@@ -845,31 +845,26 @@ class GameScreen(Frame):
             if not p.alive:
                 continue
 
-            player_moved_straight = True
             if p.move_command == DIR_LEFT:
                 p.angle = (p.angle - p.turn_rate) % 360
-                player_moved_straight = False
             elif p.move_command == DIR_RIGHT:
                 p.angle = (p.angle + p.turn_rate) % 360
-                player_moved_straight = False
-            # compute new position
+            # ## compute new position
             p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
-
-            # reset move_command if players turn rate is set to RATE_RIGHT_ANGLE.
+            # ## reset move_command if players turn rate is set to RATE_RIGHT_ANGLE.
             if p.turn_rate == RATE_RIGHT_ANGLE:
                 p.move_command = DIR_STRAIGHT
-
-            # update new dot trace
+            # ## update new dot trace
+            p.update_tolerance_heads()  # store current (old) dot-trace for tolerance computation
             old_dot_trace = p.dot_trace
             old_data_strings_rect_corners[p] = (p.data_strings, p.rect_corners)
             p.dot_trace, p.data_strings, p.rect_corners = self.dot_trace_string_data_rect_corners(pos=p.pos,
                                                                                                   r=p.size,
                                                                                                   color=p.color)
-
-            # update walls if...
-            if (self.tick_count % self.gap_rate > self.gap_length  # it is not a tick where gaps are drawn &&
-                    and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT a 90 degree turn &&
-                    and not p.flying):  # player is not flying.
+            p.compute_collision_head()  # compute the current collision head
+            # ## update walls
+            if (self.tick_count % self.gap_rate > self.gap_length
+                    and not p.flying):
                 for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
                     self.walls[pix] = -1
         return old_data_strings_rect_corners
@@ -886,9 +881,9 @@ class GameScreen(Frame):
         # Check crashes with walls and items
         for p in self.controller.players:
             if p.alive:
-                for pix in p.dot_trace:
+                for pix in p.collision_head:
                     # Walls
-                    if self.walls[pix] == -1 and not p.flying:
+                    if not p.flying and self.walls[pix] == -1 and not p.pixel_in_tolerance(pix):
                         p.alive = False
                         break
                     # Items

@@ -1,6 +1,7 @@
 
 from pynput import keyboard
 from Utils.Const import *
+from numpy import sin, cos, radians
 
 
 class Player:
@@ -30,33 +31,73 @@ class Player:
         One can create a new listener by calling make_listener.
         which starts a blocking thread monitoring the keyboard. Stop the Listener by calling stop().
         """
-
         # ATTRIBUTES
         # Basic
         self.name = name
         self.color = color
         self.keys = keys
 
+        self.wins = 0
+
         # Status
         self.alive = alive
         self.speed = speed
         self.size = size
         self.flying = flying
-
-        # Directional
-        self.pos = pos
-        self.angle = angle
         self.turn_rate = RATE_NORMAL
 
-        self.wins = 0
+        # Positional
+        self.pos = pos
+        self.angle = angle
+
+        self.dot_trace = None  # Will be defined during put_players and move in the GameScreen Class.
+        self.data_strings = None  # Used for efficiently drawing the player's dot-trace
+        self.rect_corners = None  # Used for efficiently drawing the player's dot-trace
+        self.collision_head = []  # Defined during the call of self.compute_collision_head.
+        self.base_tolerance = 6  # Higher values mean more tolerance heads (also longer tick-processing)
+        self.tolerance_heads = []  # Stores the last self.tolerance_count dot_traces
 
         # FUNCTIONAL ATTRIBUTES
         self.move_command = DIR_STRAIGHT  # -1: left (DIR_LEFT) , 0: straight (DIR_STRAIGHT), 1: right (DIR_RIGHT)
         self.listener = None  # is defined in function call self.make_listener
-        self.dot_trace = None  # Will be defined during put_players and move in the GameScreen Class.
-        self.data_strings = None
-        self.rect_corners = None
-        self.key_is_held_down = False  # Indicate if a movement key is currently held down.
+        self.key_is_held_down = False  # Indicate if a move-command key is currently held down.
+
+    def update_tolerance_heads(self):
+        """
+        Copies the current dot_trace into the list self.tolerance_heads and removes the oldest one.
+
+        :return:
+        """
+        tolerance_count = max(1, int(self.base_tolerance / self.speed))
+        self.tolerance_heads.append(self.dot_trace)
+        if len(self.tolerance_heads) > tolerance_count:
+            self.tolerance_heads.__delitem__(0)
+
+    def compute_collision_head(self):
+        """
+        Computes the "upper" half of the player's dot which will be used for collision checking. In particular, this is
+        a subset of the player's dot-trace which consists of the half-circle facing in the current direction of
+        movement including the diameter.
+
+        The result of this computation is saved in self.collision_head as a list of tuple of size of int 2.
+
+        :return:
+        """
+        v1, v2 = cos(radians(self.angle)), sin(radians(self.angle))
+        p, q = self.pos
+        self.collision_head = [(x, y) for (x, y) in self.dot_trace if (x-p)*v1+(y-q)*v2 >= 0]
+
+    def pixel_in_tolerance(self, pix):
+        """
+        Checks if the given pixel is contained in the tolerance dot-traces.
+
+        :param pix: tuple of size 2 of int, representing the pixel i question.
+        :return: bool, True if the pix is contained in self.tolerance_heads, False otherwise.
+        """
+        for dot_trace in self.tolerance_heads:
+            if pix in dot_trace:
+                return True
+        return False
 
     def make_listener(self):
         """
@@ -65,7 +106,6 @@ class Player:
 
         :return: None
         """
-
         # LISTENER
         def on_press(key):
             # Movement functionality
