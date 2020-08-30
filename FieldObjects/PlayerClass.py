@@ -21,7 +21,7 @@ class Player:
             size: int (radius of the dot in pixels),
             flying: bool
             position: (int, int)
-            angle: facing angle as int within [0, 360), 0 is facing east, 90 is facing north etc
+            angle: facing angle as int within [0, 360), 0 is facing east, 90 is facing south etc.
         """
         # ATTRIBUTES
         # Basic
@@ -46,13 +46,13 @@ class Player:
         self.data_strings = None  # Used for efficiently drawing the player's dot-trace.
         self.rect_corners = None  # Used for efficiently drawing the player's dot-trace.
         self.collision_head = []  # Defined during the call of self.compute_collision_head.
-        self.head_tolerance_count = 4  # Number of latest player positions that do not count for collision.
+        self.head_tolerance_count = 2  # Number of latest player positions that do not count for collision.
         self.tolerance_heads = []  # Stores the last self.tolerance_count dot_traces
 
         # FUNCTIONAL ATTRIBUTES
         self.move_command = DIR_STRAIGHT  # -1: left (DIR_LEFT) , 0: straight (DIR_STRAIGHT), 1: right (DIR_RIGHT)
         self.listener = None  # is defined in function call self.make_listener
-        self.key_is_held_down = False  # Indicate if a move-command key is currently held down.
+        self.key_is_held_down = False
 
     def update_tolerance_heads(self):
         """
@@ -88,10 +88,10 @@ class Player:
         Checks if the given pixel is contained in the tolerance dot-traces.
 
         :param pix: tuple of size 2 of int, representing the pixel i question.
-        :return: bool, True if the pix is contained in self.tolerance_heads, False otherwise.
+        :return: bool, True if the pix is contained in self.tolerance_heads , False otherwise.
         """
-        for dot_trace in self.tolerance_heads:
-            if pix in dot_trace:
+        for head_trace in self.tolerance_heads:
+            if pix in head_trace:
                 return True
         return False
 
@@ -102,27 +102,20 @@ class Player:
 
         :return: None
         """
-        # LISTENER
         def on_press(key):
-            # Movement functionality
-            if self.key_is_held_down:
-                # Prevent sending multiple move commands if movement key is held down.
+            if self.key_is_held_down and self.turn_rate == RATE_RIGHT_ANGLE:
+                self.move_command = DIR_STRAIGHT
                 return
-            else:
-                if key == self.keys["left"]:
-                    self.key_is_held_down = True
-                    self.move_command = DIR_LEFT
-                elif key == self.keys["right"]:
-                    self.key_is_held_down = True
-                    self.move_command = DIR_RIGHT
-                else:
-                    return
+            if key == self.keys["left"] and self.move_command != DIR_LEFT:
+                self.key_is_held_down = True
+                self.move_command = DIR_LEFT
+            elif key == self.keys["right"] and self.move_command != DIR_RIGHT:
+                self.key_is_held_down = True
+                self.move_command = DIR_RIGHT
 
         def on_release(key):
             if key == self.keys["left"] or key == self.keys["right"]:
                 self.key_is_held_down = False
                 self.move_command = DIR_STRAIGHT
-            else:
-                return
 
         self.listener = keyboard.Listener(on_press=on_press, on_release=on_release)

@@ -15,7 +15,7 @@ class ItemBlock(ItemBase):
         # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconBlock.png"
         self.rng = default_rng()
-        self.blocksize = 80
+        self.blocksize = 100
 
     def activate(self, player):
         """

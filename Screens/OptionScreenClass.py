@@ -32,7 +32,7 @@ class OptionScreen(Frame):
                    "toggle": lambda: self.toggle_player(2),
                    "adjust": lambda: self.change_keys(2),
                    }
-        self.p4 = {"name": "P4", "color": "Grey",
+        self.p4 = {"name": "P4", "color": "Purple",
                    "keys": {"left": keyboard.KeyCode(char='1'), "right": keyboard.KeyCode(char='q')},
                    "active": True,
                    "toggle": lambda: self.toggle_player(3),

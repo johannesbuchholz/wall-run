@@ -30,6 +30,7 @@ class GameScreen(Frame):
         mirrored at the first diagonal axis.
 
     """
+
     def __init__(self, controller, parent):
         Frame.__init__(self, master=parent)
         self.parent = parent
@@ -48,7 +49,7 @@ class GameScreen(Frame):
 
         self.running = False
         self.tick_count = 0
-        self._interval = 1/28  # tick interval in seconds
+        self._interval = 1 / 28  # tick interval in seconds
 
         self.practice_game = False  # If True, every round ends in a draw.
 
@@ -182,7 +183,7 @@ class GameScreen(Frame):
         # get wall trace
         tail_len = 12
         tail_trace = self.way_trace(dot_trace=p.dot_trace, dist=tail_len,
-                                    angle=(p.angle+180) % 360, sparse=max(1, int(p.size/2))
+                                    angle=(p.angle + 180) % 360, sparse=max(1, int(p.size / 2))
                                     )
         # update walls
         for c in [x for x in tail_trace if x not in p.dot_trace]:  # prevent crash with own way trace
@@ -206,7 +207,7 @@ class GameScreen(Frame):
         """
         item_to_remove, icon, pos = self.items_spawned.pop(item_id)
         x, y = pos
-        self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = 0
+        self.items[x:x + ITEMSIZE, y:y + ITEMSIZE] = 0
         return item_to_remove, icon, pos
 
     def create_item_by_name(self, name):
@@ -237,10 +238,10 @@ class GameScreen(Frame):
         # -- Place item on the field
         # visually
         x, y = pos
-        offset = (self.controller.canvas_size - self.controller.field_size)/2  # Offset between canvas and game field.
+        offset = (self.controller.canvas_size - self.controller.field_size) / 2  # Offset between canvas and game field.
         self.canvas.create_image(offset + x, offset + y, image=icon, anchor=NW)  # Icon is put un CANVAS not field
         # effectively
-        self.items[x:x+ITEMSIZE, y:y+ITEMSIZE] = self.item_id
+        self.items[x:x + ITEMSIZE, y:y + ITEMSIZE] = self.item_id
         # -- Increase item item_id
         self.item_id = self.item_id + 1
 
@@ -320,10 +321,10 @@ class GameScreen(Frame):
         # top border
         self.field_image.put(data=color, to=(0, 0, self.controller.field_size, 1))
         # right border
-        self.field_image.put(data=color, to=(0, self.controller.field_size-1,
-                                             self.controller.field_size-1, self.controller.field_size))
+        self.field_image.put(data=color, to=(0, self.controller.field_size - 1,
+                                             self.controller.field_size - 1, self.controller.field_size))
         # bottom border
-        self.field_image.put(data=color, to=(self.controller.field_size-1, 0,
+        self.field_image.put(data=color, to=(self.controller.field_size - 1, 0,
                                              self.controller.field_size, self.controller.field_size))
 
     # ########################################
@@ -342,8 +343,8 @@ class GameScreen(Frame):
         # check all pixels in square
         X, Y = pos
         trace = []
-        for x, y in [(x, y) for x in range(X-r, X+r+1) for y in range(Y-r, Y+r+1)]:
-            if (x - X)**2+(y-Y)**2 < r:
+        for x, y in [(x, y) for x in range(X - r, X + r + 1) for y in range(Y - r, Y + r + 1)]:
+            if (x - X) ** 2 + (y - Y) ** 2 < r:
                 # append if pixel is in circle around pos
                 trace.append((x % self.controller.field_size,
                               y % self.controller.field_size)
@@ -369,8 +370,8 @@ class GameScreen(Frame):
 
         X, Y = pos
         dot_trace = []
-        for x, y in [(x, y) for x in range(X-r, X+r+1) for y in range(Y-r, Y+r+1)]:
-            if (x - X)**2+(y - Y)**2 < r:
+        for x, y in [(x, y) for x in range(X - r, X + r + 1) for y in range(Y - r, Y + r + 1)]:
+            if (x - X) ** 2 + (y - Y) ** 2 <= r:
                 # Decide if and where pixels cross the field-border
                 if x < 0 and y < 0:
                     crossing_top_left.append((x % self.controller.field_size, y % self.controller.field_size))
@@ -401,21 +402,17 @@ class GameScreen(Frame):
                 continue
             data_string = ""
             a, b, x, y = get_rectangle_corners(crossing_set)
-            for i in range(a, x+1):  # x-axis roll-through
+            for i in range(a, x + 1):  # x-axis roll-through
                 data_string += "{"
-                for j in range(b, y+1):  # y-axis roll-through
+                for j in range(b, y + 1):  # y-axis roll-through
                     if (i, j) in crossing_set:
                         data_string += color + " "
                     else:
-                        current_color = self.field_image.get(i, j)
-                        if current_color == RGB_VALUES[color]:
-                            data_string += color + " "
-                        else:
-                            # data_string += "#{:02x}{:02x}{:02x}".format(*self.field_image.get(i, j)) + " "
-                            data_string += "Black" + " "
+                        # data_string += "#{:02x}{:02x}{:02x}".format(*self.field_image.get(i, j)) + " "
+                        data_string += "Black" + " "
                 data_string += "} "
             data_strings.append(data_string)
-            rect_corners.append((a, b, x+1, y+1))
+            rect_corners.append((a, b, x + 1, y + 1))
 
         return dot_trace, data_strings, rect_corners
 
@@ -425,8 +422,8 @@ class GameScreen(Frame):
 
         :param pos: starting position, tuple of size 2 of int
         :param dist: walking distance, int
-        :param angle: directional angle, 0 is facing north, int in [0, 359)
-        :return: tuple of size 2.
+        :param angle: int in [0, 359), directional angle: 0 is facing east, 90 is facing south etc.
+        :return: tuple of size 2 of int.
         """
         x, y = pos
         rad = radians(angle % 360)
@@ -491,18 +488,21 @@ class GameScreen(Frame):
                 if key == keyboard.Key.space:
                     self.start_round()
                     return False
+
             self.listener_space = keyboard.Listener(on_press=on_press)
         elif act == "init":
             def on_press(key):
                 if key == keyboard.Key.space:
                     self.initialise_new_round()
                     return False
+
             self.listener_space = keyboard.Listener(on_press=on_press)
         elif act == "pause":
             def on_press(key):
                 if key == keyboard.Key.space:
                     self.pause_round()
                     return False
+
             self.listener_space = keyboard.Listener(on_press=on_press)
 
     def turn_off_space_listener(self):
@@ -660,11 +660,9 @@ class GameScreen(Frame):
             start = default_timer()
             # print("Current Tick:", self.tick_count)
             self.tick_count += 1
-            # #### old_traces = self.move()
             old_traces = self.move()
-            move = default_timer()
+            # move = default_timer()
             # print("Time for move:", move - start)
-            # #### self.update_visuals(old_traces)
             self.update_visuals(old_traces)
             self.check_events()
             if self.check_round_end():
@@ -674,14 +672,16 @@ class GameScreen(Frame):
                 break
             update = default_timer()
             # print("Time for update:", update - move)
-            if not first_loop and self._interval-(update-start) < 0:
-                self.pause_round()
-                self.label_info.config(text="The tick processing\ntook too long!\nGame is paused.",
-                                       fg="black")
+            if not first_loop and self._interval - (update - start) < 0:
+                # self.pause_round()
+                print("Tick processing took too long!"
+                      "\nTick: {}, wanted: {}, actual: {}".format(self.tick_count,
+                                                                  round(self._interval, 4),
+                                                                  round(update - start, 4)))
             first_loop = False
-            # print("Sleep length:", self._interval-(update-start))
-            sleep(max([0, self._interval-(update-start)]))
-            end = default_timer()
+            # print("Sleep length:", self._interval - (update - start))
+            sleep(max([0, self._interval - (update - start)]))
+            # end = default_timer()
             # print("Tick length:", end - start, "\n==============")
 
     def move(self):
@@ -695,16 +695,15 @@ class GameScreen(Frame):
         for p in self.controller.players:
             if not p.alive:
                 continue
-
             if p.move_command == DIR_LEFT:
                 p.angle = (p.angle - p.turn_rate) % 360
             elif p.move_command == DIR_RIGHT:
                 p.angle = (p.angle + p.turn_rate) % 360
-            # ## compute new position
-            p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
-            # ## reset move_command if players turn rate is set to RATE_RIGHT_ANGLE.
+            # ## Reset turn rate for 90 degree players
             if p.turn_rate == RATE_RIGHT_ANGLE:
                 p.move_command = DIR_STRAIGHT
+            # ## compute new position
+            p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
             # ## update new dot trace
             p.update_tolerance_heads()  # store current (old) dot-trace for tolerance computation
             old_dot_trace = p.dot_trace
@@ -714,9 +713,8 @@ class GameScreen(Frame):
                                                                                                   color=p.color)
             p.compute_collision_head()  # compute the current collision head
             # ## update walls
-            if (self.tick_count % self.gap_rate > self.gap_length
-                    and not p.flying):
-                for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
+            if self.tick_count % self.gap_rate > self.gap_length and not p.flying:
+                for pix in old_dot_trace:  # [c for c in p.dot_trace if c not in p.dot_trace]:
                     self.walls[pix] = -1
         return old_data_strings_rect_corners
 
@@ -727,14 +725,14 @@ class GameScreen(Frame):
             2. Check collision with items -> activate items
             3. Check item expiration -> deactivate items
             4. Spawn new items by chance
-        :return:
+        :return: None
         """
         # Check crashes with walls and items
         for p in self.controller.players:
             if p.alive:
                 for pix in p.collision_head:
                     # Walls
-                    if not p.flying and self.walls[pix] == -1 and not p.pixel_in_tolerance(pix):
+                    if self.walls[pix] == -1 and not p.flying and not p.pixel_in_tolerance(pix):
                         p.alive = False
                         break
                     # Items
@@ -757,8 +755,8 @@ class GameScreen(Frame):
             if self.item_max_count <= len(self.items_spawned):
                 oldest_id = min(self.items_spawned.keys())
                 self.remove_item(oldest_id)
-            x_rand = self.rng.integers(ITEMSIZE, self.controller.field_size-ITEMSIZE)
-            y_rand = self.rng.integers(ITEMSIZE, self.controller.field_size-ITEMSIZE)
+            x_rand = self.rng.integers(ITEMSIZE, self.controller.field_size - ITEMSIZE)
+            y_rand = self.rng.integers(ITEMSIZE, self.controller.field_size - ITEMSIZE)
             self.place_item(name=self.rng.choice(self.controller.item_names), pos=(x_rand, y_rand))
 
     def update_visuals(self, old_data_strings_rect_corners):
@@ -799,7 +797,7 @@ class GameScreen(Frame):
         :return: None
         """
         # visually
-        self.field_image.put(data="Black", to=(1, 1, self.controller.field_size-1, self.controller.field_size-1))
+        self.field_image.put(data="Black", to=(1, 1, self.controller.field_size - 1, self.controller.field_size - 1))
         # effectively
         self.walls[1:-1, 1:-1] = 0
 
@@ -991,9 +989,9 @@ class GameScreen(Frame):
         # create data string.
         # Roll through every pixel of the square from (x-p.size, y-p.size) to (x+p.size, y+p.size) and decide its color.
         data_string = ""
-        for i in range(a, x+1):  # x-axis roll-through
+        for i in range(a, x + 1):  # x-axis roll-through
             data_string += "{"
-            for j in range(b, y+1):  # y-axis roll-through
+            for j in range(b, y + 1):  # y-axis roll-through
                 data_string += func(i, j) + " "
             data_string += "} "
         self.field_image.put(data=data_string, to=rect)
