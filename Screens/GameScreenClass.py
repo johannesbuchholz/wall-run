@@ -512,7 +512,7 @@ class GameScreen(Frame):
         """
         try:
             self.listener_space.stop()
-            self.listener_space.join()
+            # self.listener_space.join()
         except AttributeError:
             pass
         except RuntimeError:  # If thread not started yet
@@ -528,7 +528,7 @@ class GameScreen(Frame):
             p.move_command = DIR_STRAIGHT
             try:
                 p.listener.stop()
-                p.listener.join()
+                # p.listener.join()
             except AttributeError:
                 pass
             except RuntimeError:  # If thread not started yet
@@ -655,7 +655,6 @@ class GameScreen(Frame):
 
         :return: None
         """
-        first_loop = True
         while self.running:
             start = default_timer()
             # print("Current Tick:", self.tick_count)
@@ -672,14 +671,13 @@ class GameScreen(Frame):
                 break
             update = default_timer()
             # print("Time for update:", update - move)
-            if not first_loop and self._interval - (update - start) < 0:
-                # self.pause_round()
+            if self._interval - (update - start) < 0:
                 print("Tick processing took too long!"
                       "\nTick: {}, wanted: {}, actual: {}".format(self.tick_count,
                                                                   round(self._interval, 4),
                                                                   round(update - start, 4)))
-            first_loop = False
             # print("Sleep length:", self._interval - (update - start))
+            self.notify_players()
             sleep(max([0, self._interval - (update - start)]))
             # end = default_timer()
             # print("Tick length:", end - start, "\n==============")
@@ -785,6 +783,22 @@ class GameScreen(Frame):
                 for data_string, rect_corners in zip(p.data_strings, p.rect_corners):
                     self.field_image.put(data=data_string.replace(p.color, "White"),
                                          to=rect_corners)
+
+    def notify_players(self):
+        """
+        Calls every players compute_move_command method.
+        This will make non-human players adjust their current move-command. The computations will take place in a
+        separate thread which this function invokes.
+
+        :return: None
+        """
+        for p in self.controller.players:
+            Thread(group=None,
+                   target=p.compute_move_command,
+                   kwargs={"walls": self.walls},
+                   name=p.color + "_compute_move_command",
+                   daemon=True
+                   ).start()
 
     # ########################################
     # Helper functions
@@ -943,10 +957,8 @@ class GameScreen(Frame):
                 continue
             if p.move_command == DIR_LEFT:
                 p.angle = (p.angle - p.turn_rate) % 360
-                player_moved_straight = False
             elif p.move_command == DIR_RIGHT:
                 p.angle = (p.angle + p.turn_rate) % 360
-                player_moved_straight = False
             # compute new position
             p.pos = self.get_target_pixel(pos=p.pos, dist=p.speed, angle=p.angle)
             player_moved_straight = True

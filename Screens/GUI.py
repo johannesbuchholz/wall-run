@@ -1,11 +1,9 @@
 
 from tkinter import (Tk, Frame)
 
-from Screens import (RuleScreenClass as rules,
-                     OptionScreenClass as options,
-                     GameScreenClass as games,
-                     TitleScreenClass as titles
-                     )
+from Screens import (RuleScreenClass, OptionScreenClass, GameScreenClass, TitleScreenClass)
+
+from FieldObjects.PlayerClassBot import PlayerBot
 
 
 class GUI(Tk):
@@ -47,10 +45,11 @@ class GUI(Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.title("Wall Run")
-        #self.iconphoto(False, PhotoImage(file='.png'))
+        # self.iconphoto(False, PhotoImage(file='.png'))
 
         # game related
-        self.players = []
+        dummy_player = PlayerBot(name="Bot", color="Red")
+        self.players = [dummy_player]
         self.max_rounds = 5
         # All items registered
         self.all_items = ["ItemClear", "ItemBlock", "ItemJump", "ItemGlueAll", "ItemSlickSelf", "ItemFly",
@@ -59,10 +58,10 @@ class GUI(Tk):
         # All items chosen for the current game. Might be changed by options.
         self.item_names = list(self.all_items)
         # GUI objects
-        self.frames = {"Title": titles.TitleScreen(parent=container, controller=self),
-                       "Rules": rules.RuleScreen(parent=container, controller=self),
-                       "Options": options.OptionScreen(parent=container, controller=self),
-                       "Game": games.GameScreen(parent=container, controller=self)}
+        self.frames = {"Title": TitleScreenClass.TitleScreen(parent=container, controller=self),
+                       "Rules": RuleScreenClass.RuleScreen(parent=container, controller=self),
+                       "Options": OptionScreenClass.OptionScreen(parent=container, controller=self),
+                       "Game": GameScreenClass.GameScreen(parent=container, controller=self)}
 
         self.frames["Title"].grid(row=0, column=0, sticky="nsew")
         self.frames["Game"].grid(row=0, column=0, sticky="nsew")

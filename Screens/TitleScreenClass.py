@@ -1,7 +1,7 @@
 
 from tkinter import (Frame, Label, Button,
-                     TOP, CENTER, BOTTOM, DISABLED)
-from Screens import GameScreenClass as games
+                     TOP, CENTER, BOTTOM)
+from Screens import GameScreenClass
 
 
 class TitleScreen(Frame):
@@ -47,7 +47,7 @@ class TitleScreen(Frame):
                text="Practice",
                command=self.new_practice_game,
                cnf=button_setting,
-               ).pack(side=TOP, anchor=CENTER, pady=(0,10))
+               ).pack(side=TOP, anchor=CENTER, pady=(0, 10))
 
         Button(master=self,
                text="Options",
@@ -79,7 +79,7 @@ class TitleScreen(Frame):
 
         :return: None
         """
-        self.controller.frames["Game"] = games.GameScreen(parent=self.parent, controller=self.controller)
+        self.controller.frames["Game"] = GameScreenClass.GameScreen(parent=self.parent, controller=self.controller)
         self.controller.frames["Game"].grid(row=0, column=0, sticky="nsew")
         self.controller.frames["Game"].set_buttons(state="init")  # Initialise buttons on the game screen.
         self.controller.show_frame("Game")
@@ -89,11 +89,9 @@ class TitleScreen(Frame):
         Creates a new game screen and brings it to the front. Enables practice mode.
         :return: None
         """
-        self.controller.frames["Game"] = games.GameScreen(parent=self.parent, controller=self.controller)
+        self.controller.frames["Game"] = GameScreenClass.GameScreen(parent=self.parent, controller=self.controller)
         self.controller.frames["Game"].grid(row=0, column=0, sticky="nsew")
         self.controller.frames["Game"].set_buttons(state="init")  # Initialise buttons on the game screen.
         self.controller.frames["Game"].practice_game = True  # Enable practice mode
         self.controller.frames["Game"].label_title.config(text="___Wall\n  Run___\n\nPractice Mode")  # Set title
         self.controller.show_frame("Game")
-
-

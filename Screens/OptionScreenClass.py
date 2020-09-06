@@ -3,7 +3,7 @@ from tkinter import (Frame, Label, Button, Entry, IntVar, Radiobutton, PhotoImag
                      TOP,
                      )
 from pynput import keyboard
-from FieldObjects import PlayerClass as pc
+from FieldObjects import PlayerClass
 
 
 class OptionScreen(Frame):
@@ -54,7 +54,7 @@ class OptionScreen(Frame):
 
         # -- Button configs
         cnf_button_toggle_player = {"width": 6, "height": 3, "borderwidth": 2, "font": self.controller.font_medium}
-        cnf_label_keys = {"width": 5, "height": 2, "borderwidth":2}
+        cnf_label_keys = {"width": 5, "height": 2, "borderwidth": 2}
         cnf_button_adjust = {"width": 10, "height": 1, "borderwidth": 2}
         cnf_button_item = {"width": 100, "height": 40, "borderwidth": 1}
         cnf_button_thin1 = {"width": 10, "height": 1, "borderwidth": 1}
@@ -191,7 +191,7 @@ class OptionScreen(Frame):
         players = []
         for p in self.p_options:
             if p["active"]:
-                players.append(pc.Player(name=p["name"], color=p["color"], keys=p["keys"]))
+                players.append(PlayerClass.Player(name=p["name"], color=p["color"], keys=p["keys"]))
         # Transfer settings to controller
         self.controller.max_rounds = self.max_round.get()
         self.controller.players = players

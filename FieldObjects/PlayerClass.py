@@ -119,3 +119,15 @@ class Player:
                 self.move_command = DIR_STRAIGHT
 
         self.listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+
+    def compute_move_command(self, walls):
+        """
+        Computes an appropriate move-direction according to the current walls placed on the field and this players
+        position.
+
+        Tis does nothing for the base player class.
+
+        :param walls: 2-d numpy array array of int,  -1 entries are supposed to be walls.
+        :return: None
+        """
+        return
