@@ -70,7 +70,7 @@ class GUI(Tk):
 
         self.show_frame("Title")
 
-        self.frames["Options"].apply()  # apply basic settings
+        # self.frames["Options"].apply()  # apply basic settings
 
     def show_frame(self, page_name):
         """

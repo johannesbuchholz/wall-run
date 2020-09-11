@@ -1,25 +1,24 @@
 
-import timeit
+from FieldObjects import PlayerClassBot as p
+import numpy as np
+from timeit import default_timer
 
-setup = """
-import numpy as np  
-a = np.zeros((160, 160))
-x = (1,3,4,5,6,8,4,5,6,7,9,6,3,4)
-y = (3,2,4,7,6,3,4,5,6,7,1,6,2,1)
-a[x, y] = -1
-"""
+a = np.zeros((15, 15), "int")
+a[:,:8] = -1
 
-code1 = """
-np.argwhere((a==-1))
-"""
 
-code2 = """
-n, m = a.shape
-o = []
-for i in range(n):
- for j in range(m):
-  if a[i, j] == -1:
-   o.append([i, j])
-"""
-print("argwhere: ", timeit.timeit(stmt=code1, setup=setup, number=1000)/1000)
-print("for-loop: ", timeit.timeit(stmt=code2, setup=setup, number=1000)/1000)
+s = np.argwhere((a == -1))
+n = round(len(s)/4)
+
+start = default_timer()
+sol = p.stochastic_gradient_descent(f=p.target_function_cont, deriv=p.target_function_cont_deriv,
+                                    x0=0, stepsize=180, samples=s, batchsize=8, choose_best=False,
+                                    maxit=10,
+                                    **{"pos": (7, 7)}
+                                    )
+end = default_timer()
+print(a)
+print("Duration: ", round(end-start, 4))
+print("Samples: ", n)
+print("Computation result: ", round(sol, 4))
+print("Target-Angle: ", round(sol) % 360)

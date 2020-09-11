@@ -1,7 +1,7 @@
 from FieldObjects.PlayerClass import Player
 from pynput import keyboard
 from Utils.Const import *
-from numpy import sin, cos, radians, arctan, rad2deg, argwhere
+from numpy import sin, cos, radians, arctan, rad2deg, deg2rad, argwhere, sqrt
 from random import choices
 from scipy.optimize import minimize
 
@@ -22,7 +22,7 @@ class PlayerBot(Player):
         self.target_angle = None
         self.target_tolerance = self.turn_rate  # angle difference under which the target is considered as reached.
         self.scope = 80  # Look-Out number of pixels in each direction of the current position
-        self.cone_angle = 2  # apex angle of cone from current position, should be even.
+        self.cone_angle = 6  # apex angle of cone from current position, should be even.
 
     def update_tolerance_heads(self):
         """
@@ -108,19 +108,18 @@ class PlayerBot(Player):
         self.busy = True
         self.target_tolerance = self.turn_rate
 
-        # if not self.target_angle or self.is_target_angle_reached():
-        # print("target angle is reached: ", self.target_angle)
-        # compute new target-angle
-        x, y = self.pos
-        scope_matrix = walls[x - self.scope:x + self.scope + 1,
-                       y - self.scope:y + self.scope + 1]  # side length equals 2*scope+1
-        wall_points = argwhere((scope_matrix == -1))
-        t = stochastic_gradient_descent(f=self.target_function_cont, deriv=self.target_function_cont_deriv,
-                                        x0=self.angle, stepsize=1, samples=wall_points, batchsize=None,
-                                        maxit=10, choose_best=False, **{"a": self.cone_angle}
-                                        )
-        self.target_angle = (360 - round(t)) % 360  # game-angles increase clockwise, hence we adjust this here
-        print("NEW target angle: ", self.target_angle)
+        if not self.target_angle or self.is_target_angle_reached():
+            print("target angle was reached: ", self.target_angle, "\nComputing new...")
+            # compute new target-angle
+            x, y = self.pos
+            scope_matrix = walls[x - self.scope:x + self.scope + 1,
+                           y - self.scope:y + self.scope + 1]  # side length equals 2*scope+1
+            wall_points = argwhere((scope_matrix == -1))
+            t = stochastic_gradient_descent(f=target_function_cont, deriv=target_function_cont_deriv,
+                                            x0=self.angle, stepsize=1, samples=wall_points, batchsize=-1,
+                                            maxit=10, choose_best=False, **{"pos": self.pos})
+            self.target_angle = round(t) % 360
+            print("NEW target angle: ", self.target_angle)
         self.issue_move_command()
         self.busy = False
         return
@@ -131,9 +130,9 @@ class PlayerBot(Player):
 
         :return: boolean
         """
-        print("----------------------------")
-        print("current angle: ", self.angle)
-        print("target: ", self.target_angle)
+        # print("----------------------------")
+        # print("current angle: ", self.angle)
+        # print("target: ", self.target_angle)
         lower_bound = (self.target_angle - self.target_tolerance) % 360
         upper_bound = (self.target_angle + self.target_tolerance) % 360
         if upper_bound < lower_bound:
@@ -142,7 +141,7 @@ class PlayerBot(Player):
         else:
             upper_bound_alt = upper_bound
             lower_bound_alt = lower_bound
-        print(lower_bound <= self.angle <= upper_bound_alt or lower_bound_alt <= self.angle <= upper_bound)
+        # print(lower_bound <= self.angle <= upper_bound_alt or lower_bound_alt <= self.angle <= upper_bound)
         return lower_bound <= self.angle <= upper_bound_alt or lower_bound_alt <= self.angle <= upper_bound
 
     def issue_move_command(self):
@@ -168,59 +167,70 @@ class PlayerBot(Player):
         else:
             self.move_command = DIR_LEFT
 
-    def target_function_cont(self, t, wall_points, a):
-        """
-        Continuous loss-function for a given target angle t, tolerance value a (similar to cone apex-angle) and the
-        current wall-scope.\n
-        The idea is to punish a target angle t, where many wall-points lie "close" to the facing-axis given by t.
-        What close actually means, can be adjusted with the tolerance value.
-        The Loss function then can be written as:
 
-        - Loss(t) = sum over {(x, y)-wall_points} of -((b(x,y) - t)/(1+a))**2
-        - b(x,y) = arctan(y/x)
+def target_function_cont(t, wall_points, pos):
+    """
+    Continuous loss-function for a given target angle and the current wall-points around the point pos.
 
-        Explanation of the terms:
-            Consider a 2-d plane and a cone at the origin with apex angle a and facing angle t,
-            where t=0 means facing east.
-            Angles increase counter-clockwise. We search for an angle t, where fewest points of walls with entry -1 lie
-            inside that cone.\n
-            A point (x, y) lies within the cone, if and only if arctan(y/x) is in [t-a/2, t+a/2]. The above Loss-Function
-            is the attempt to define a continuous representation of that idea.
+    The idea is to punish a target angle t, where many wall-points lie "close" to the facing-axis given by t.
+    We project every wall-point onto the unit-circle and compute a point dependant on t on the circle lying furthest
+    away from every other point in euclidean 2-norm.
+    The Loss function then can be written as:
 
-        :param t: float, angle in degree in [0, 360), this is the objective-parameter to minimize over.
-        :param wall_points: list of tuple of size 2 of int, all locations of wall entries (-1 values)
-        The coordinates should be shifted, such that (0, 0) is the player's current position.
-        :param a: float > 0, tolerance value, greater a results in lesser punishment.
-        :return: float, Loss function value of the give target angle (will always be <= 0).
-        """
-        temp_sum = 0
-        for i, j in wall_points:
-            # compute coordinates for each pixel, such that self.pos is the origin.
-            x = i - self.scope
-            y = j - self.scope
-            temp_sum -= (arctan_lim(x, y) - t) ** 2
-        return 1 / (1 + a) ** 2 * temp_sum
+    - Loss(t) = - 1/n SUM_(x, y) {||(x , y) - (a(t), b(t))||**2}
+    - (a(t), b(t)) = (cos(t), sin(t))
 
-    def target_function_cont_deriv(self, t, wall_points, a):
-        """
-        First derivative of the target function defined in self.target_function_cont.
+    This Results in the Loss-Term:
 
-        :param t: float, angle in [0, 360), this is the objective-parameter to minimize over.
-        :param wall_points: 2-d numpy array of int, contains either 0 or -1 entries.
-        The matrix is build such that the pixes at wall_points[scope, scope] is the player's position.
-        :param a: float > 0, tolerance value, greater a results in lesser punishment.
-        :return: float, Loss function value of the give target angle (will always be <= 0).
-        """
-        temp_sum = 0
-        for i, j in wall_points:
-            # compute coordinates for each pixel, such that self.pos is the origin.
-            x = i - self.scope
-            y = j - self.scope
-            temp_sum += (arctan_lim(x, y) - t)
-        return 2 / (1 + a) ** 2 * temp_sum
+    - Loss(t) = -2/n * SUM_(x, y){1 - x * cos(t) - y * sin(t)}
+
+    :param t: float, angle in degree in [0, 360), this is the objective-parameter to minimize over.
+    :param pos: tuple of size 2 of int, position which is considered the center of all wall-points.
+    :param wall_points: list of tuple of size 2 of int, all locations of wall entries (-1 values)
+    The coordinates should be shifted, such that (0, 0) is the player's current position.
+    :return: float, Loss function value of the give target angle.
+    """
+    temp_sum = 0
+    pos_x, pos_y = pos
+    t = deg2rad(t)  # angles in radians
+    for i, j in wall_points:
+        # compute coordinates for each pixel, such that self.pos is the origin.
+        x = i - pos_x
+        y = j - pos_y
+        # project onto unit-sphere
+        if not x == y == 0:
+            x = x / sqrt(x ** 2 + y ** 2)
+            y = y / sqrt(x ** 2 + y ** 2)
+        temp_sum += 1 - x * cos(t) - y * sin(t)
+    return -2/len(wall_points) * temp_sum
+
+# TODO: Target angle seems to be off for 90 degrees clock-wise.
+def target_function_cont_deriv(t, wall_points, pos):
+    """
+    First derivative of the target function defined in self.target_function_cont.
+
+    :param t: float, angle in [0, 360), this is the objective-parameter to minimize over.
+    :param pos: tuple of size 2 of int, position which is considered the center of all wall-points.
+    :param wall_points: 2-d numpy array of int, contains either 0 or -1 entries.
+    The matrix is build such that the pixes at wall_points[scope, scope] is the player's position.
+    :return: float, Loss function value of the give target angle (will always be <= 0).
+    """
+    temp_sum = 0
+    pos_x, pos_y = pos
+    t = deg2rad(t)  # angles in radians
+    for i, j in wall_points:
+        # compute coordinates for each pixel, such that self.pos is the origin.
+        x = i - pos_x
+        y = j - pos_y
+        # project onto unit-sphere
+        if not x == y == 0:
+            x = x / sqrt(x ** 2 + y ** 2)
+            y = y / sqrt(x ** 2 + y ** 2)
+        temp_sum += x * sin(t) - y * cos(t)
+    return -2 / len(wall_points) * temp_sum
 
 
-def stochastic_gradient_descent(f, deriv, x0, stepsize, samples, batchsize=5, maxit=100, choose_best=False, **kwargs):
+def stochastic_gradient_descent(f, deriv, x0, stepsize, samples, batchsize=-1, maxit=100, choose_best=False, **kwargs):
     """
     Computes the approximate minimum of the function, that produced jac, which is its first derivative.
 
@@ -229,22 +239,35 @@ def stochastic_gradient_descent(f, deriv, x0, stepsize, samples, batchsize=5, ma
     :param x0: array of according dim, tarting point
     :param stepsize: float, stepsize
     :param samples: list of tetermining each sum-term of the loss function.
-    :param batchsize: int, number of samples to draw for each step.
+    :param batchsize: int, number of samples to draw for each step. If negative, use all samples.
     :param maxit: int, number of total iterations
     :param kwargs: key word arguments to pass to deriv.
     :param choose_best: boolean, if True, the best computed value will be returned.
     :return: array of shape x0.shape.
     """
+    # print("Starting optimization...")
     x = x0
     x_best = x0
+    no_sampling = False
     for i in range(maxit):
-        if not batchsize or batchsize >= len(samples):
+        # print("--- Iteration ", i)
+        if batchsize < 0 or batchsize >= len(samples):
             random_samples = samples
+            no_sampling = True
+            # print("No sampling. Default to common gradient descent.")
         else:
             random_samples = choices(samples, k=batchsize)
-        x = x - stepsize / (1+i) * deriv(x, random_samples, **kwargs)
+
+        if no_sampling:
+            x = x - deriv(x, random_samples, **kwargs)
+        else:
+            x = x - stepsize / (1+i) * deriv(x, random_samples, **kwargs)
+        # print("Current x: ", x)
+        # print("Current loss: ", f(x, samples, **kwargs))
+        # print("Current garadient: ", deriv(x, samples, **kwargs))
         if choose_best and f(x, samples, **kwargs) < f(x_best, samples, **kwargs):
             x_best = x
+    # print("---------- Done.")
     if choose_best:
         return x_best
     else:
