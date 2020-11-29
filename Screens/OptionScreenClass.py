@@ -205,6 +205,8 @@ class OptionScreen(Frame):
         """
         Turns off and on the ith player of in the p_options list.
         """
+        # remove focus
+        self.focus_set()
         entry = self.p_options[i]
         entry["active"] = not entry["active"]
         if entry["active"]:
@@ -219,6 +221,8 @@ class OptionScreen(Frame):
         """
         Appends or removes the the string item_name from self.controller.item_names.
         """
+        # remove focus
+        self.focus_set()
         if item_name in self.item_names_to_apply:
             # Remove item
             self.item_names_to_apply.remove(item_name)
@@ -232,6 +236,8 @@ class OptionScreen(Frame):
         """
         Toggles each item button once.
         """
+        # remove focus
+        self.focus_set()
         for item_name in self.controller.all_items:
             self.toggle_item(item_name)
 
@@ -240,7 +246,7 @@ class OptionScreen(Frame):
     # ############################
     def make_listener(self, i):
         """
-        Makes a listener for player i (0 to 5) that records the next two key presses. First press becomes left command,
+        Makes field listener for player i (0 to 5) that records the next two key presses. First press becomes left command,
         second one becomes right command.
         :param i:
         :return: None
@@ -297,7 +303,7 @@ class OptionScreen(Frame):
 
     def change_keys(self, i):
         """
-        Creates a keyboard listener that records the next two keys pressed and changes the command keys of the ith
+        Creates field keyboard listener that records the next two keys pressed and changes the command keys of the ith
         player to these keys.
         :param i: change keys of ith player (0 to 5) as int.
         :return: None

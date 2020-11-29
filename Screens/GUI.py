@@ -3,12 +3,12 @@ from tkinter import (Tk, Frame)
 
 from Screens import (RuleScreenClass, OptionScreenClass, GameScreenClass, TitleScreenClass)
 
-from FieldObjects.PlayerClassBot import PlayerBot
+from FieldObjects.PlayerClassBot import PlayerBotContLossStrategy, PlayerBotConeStrategy
 
 
 class GUI(Tk):
     """
-    This class provides a general user interface for the game.
+    This class provides field general user interface for the game.
     There are three types of windows:
         1. Title Screen
         2. Game Window
@@ -18,7 +18,7 @@ class GUI(Tk):
 
     def __init__(self):
         """
-        This class represents a GUI instance of the game.
+        This class represents field GUI instance of the game.
         It initialises all frames and brings the title screen to the front.
         """
 
@@ -48,8 +48,14 @@ class GUI(Tk):
         # self.iconphoto(False, PhotoImage(file='.png'))
 
         # game related
-        dummy_player = PlayerBot(name="Bot", color="Red")
-        self.players = [dummy_player]
+        # dummy_player1 = PlayerBotConeStrategy(name="Bot1", color="Red")
+        # dummy_player2 = PlayerBotContLossStrategy(name="Bot2", color="Blue")
+        # dummy_player3 = PlayerBotContLossStrategy(name="Bot3", color="Orange")
+        self.players = [
+                        # dummy_player1,
+                        # dummy_player2,
+                        # dummy_player3
+                        ]
         self.max_rounds = 5
         # All items registered
         self.all_items = ["ItemClear", "ItemBlock", "ItemJump", "ItemGlueAll", "ItemSlickSelf", "ItemFly",
@@ -70,11 +76,11 @@ class GUI(Tk):
 
         self.show_frame("Title")
 
-        # self.frames["Options"].apply()  # apply basic settings
+        self.frames["Options"].apply()  # apply basic settings
 
     def show_frame(self, page_name):
         """
-        Show a frame for the given page name
+        Show field frame for the given page name
         """
         frame = self.frames[page_name]
         frame.tkraise()

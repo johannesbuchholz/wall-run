@@ -75,7 +75,7 @@ class TitleScreen(Frame):
 
     def new_game(self):
         """
-        Creates a new game screen and brings it to the front.
+        Creates field new game screen and brings it to the front.
 
         :return: None
         """
@@ -86,7 +86,7 @@ class TitleScreen(Frame):
 
     def new_practice_game(self):
         """
-        Creates a new game screen and brings it to the front. Enables practice mode.
+        Creates field new game screen and brings it to the front. Enables practice mode.
         :return: None
         """
         self.controller.frames["Game"] = GameScreenClass.GameScreen(parent=self.parent, controller=self.controller)

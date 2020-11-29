@@ -1,24 +1,43 @@
-
-from FieldObjects import PlayerClassBot as p
+from Utils.HelperFunctions import *
 import numpy as np
-from timeit import default_timer
 
-a = np.zeros((15, 15), "int")
-a[:,:8] = -1
+print(get_point_from_angle(180))
+print(cone_contains(-1, 0, 180, 30))
 
+d = 15
+walls = np.zeros((d, d), "int")
 
-s = np.argwhere((a == -1))
-n = round(len(s)/4)
+walls[0, :] = -1
+walls[-2:, :] = -1
+walls[:, -1] = -1
+walls[:, 0] = -1
 
-start = default_timer()
-sol = p.stochastic_gradient_descent(f=p.target_function_cont, deriv=p.target_function_cont_deriv,
-                                    x0=0, stepsize=180, samples=s, batchsize=8, choose_best=False,
-                                    maxit=10,
-                                    **{"pos": (7, 7)}
-                                    )
-end = default_timer()
+scope_radius = 3
+x, y = 2, 6
+angle = 270
+apex_angle = 30
+
+walls[x, y] = -1
+n, _ = np.shape(walls)
+
+a = [(i - x, j - y)
+    for i in range(x - scope_radius, x + scope_radius + 1)
+    for j in range(y - scope_radius, y + scope_radius + 1)
+    if walls[i % n, j % n] == -1 and sqrt((i - x) ** 2 + (j - y) ** 2) < scope_radius]
+
+print(walls)
 print(a)
-print("Duration: ", round(end-start, 4))
-print("Samples: ", n)
-print("Computation result: ", round(sol, 4))
-print("Target-Angle: ", round(sol) % 360)
+
+left_score = 0
+right_score = 0
+cone_points = []
+
+for i, j in a:
+    if cone_contains(i, j, t=angle, a=apex_angle):
+        cone_points.append((i, j))
+        if is_point_on_left_side(angle, i, j):
+            left_score += 1
+        else:
+            right_score += 1
+print("left score: ", left_score)
+print("right score: ", right_score)

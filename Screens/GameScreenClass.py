@@ -1,6 +1,6 @@
 from importlib import import_module
 
-from numpy import sin, cos, radians, zeros, ones
+from numpy import sin, cos, radians, zeros, ones, argwhere
 from numpy.random import default_rng
 from threading import Thread
 from tkinter import (Frame, Canvas, PhotoImage, Label, Button,
@@ -18,17 +18,18 @@ class GameScreen(Frame):
     Contains all elements and functionality for playing the game.
 
     Concerning the actual game field there are two layers to look at: the visual and the effective layer.
-    The visual layer consists of a Canvas Object containing a PhotoImage Object where all the pixels are displayed on.
+    The visual layer consists of field Canvas Object containing field PhotoImage Object where all the pixels are displayed on.
     The effective layer consists of two 2-dimensional numpy arrays storing the locations of walls and items
     respectively. For convenience reasons, both layers use the same syntax for location description. This results in
     the second layer being mirrored compared to the first layer. An example:
         Considering the pixel on the first layer at position (x, y), x describing the horizontal location and y the
         vertical location starting at the top left corner. In order for the second layer to align perfectly to that,
         the corresponding pixel should be at position [y, x] since the first entry describes the row number and the
-        second entry the column number of a matrix.
+        second entry the column number of field matrix.
         Instead, both layers store the corresponding pixel at (x, y) resulting in the second layer being
         mirrored at the first diagonal axis.
-
+        In practice this means, that when processing an entry (i, j) from teh second layer, we act as if that entry
+        correspons to the first-layer-pixel (i,j).
     """
 
     def __init__(self, controller, parent):
@@ -51,7 +52,7 @@ class GameScreen(Frame):
         self.tick_count = 0
         self._interval = 1 / 28  # tick interval in seconds
 
-        self.practice_game = False  # If True, every round ends in a draw.
+        self.practice_game = False  # If True, every round ends in field draw.
 
         # -- Game field
         self.canvas = Canvas(master=self,
@@ -143,7 +144,7 @@ class GameScreen(Frame):
         """
         This function places player p on the game field at position pos.
         In fact this function updates the coordinates of the player-object to pos
-        and additionally adds a tail-wall to the class-attribute walls.
+        and additionally adds field tail-wall to the class-attribute walls.
         It also resets all player attributes to its defaults.
 
         :param p: Player Object to be placed.
@@ -212,7 +213,7 @@ class GameScreen(Frame):
 
     def create_item_by_name(self, name):
         """
-        Creates a random item instance among all registered items and returns it.
+        Creates field random item instance among all registered items and returns it.
 
         :param name: string, name of the item-class
         :return: Item instance of given class name.
@@ -333,7 +334,7 @@ class GameScreen(Frame):
 
     def dot_trace(self, pos, r):
         """
-        Creates a list of coordinates that represent a circle of radius r on a 2d grid.
+        Creates field list of coordinates that represent field circle of radius r on field 2d grid.
         This function respects the borders of the game field.
 
         :param pos: center of dot as tuple of size 2 of int
@@ -353,7 +354,7 @@ class GameScreen(Frame):
 
     def dot_trace_string_data_rect_corners(self, pos, r, color):
         """
-        Computes a string containing the information for drawing a dot with the native PhotoImage put function.
+        Computes field string containing the information for drawing field dot with the native PhotoImage put function.
         The returned string-data does not cross the game field border.
         """
         crossing_bot = []
@@ -418,7 +419,7 @@ class GameScreen(Frame):
 
     def get_target_pixel(self, pos, dist, angle):
         """
-        Computes the pixel that is reached after going from pos in direction of angle for a distance of dist.
+        Computes the pixel that is reached after going from pos in direction of angle for field distance of dist.
 
         :param pos: starting position, tuple of size 2 of int
         :param dist: walking distance, int
@@ -433,8 +434,8 @@ class GameScreen(Frame):
 
     def way_trace(self, dot_trace, dist, angle, sparse=1):
         """
-        Computes a list of positions if one starts from each position in dot_trace
-        and goes a distance of dist facing the given angle.
+        Computes field list of positions if one starts from each position in dot_trace
+        and goes field distance of dist facing the given angle.
 
         :param dot_trace: list of tuple of size 2 of int or tuple of size 2
         :param dist: distance to go, int
@@ -477,7 +478,7 @@ class GameScreen(Frame):
 
     def make_listener(self, act):
         """
-        Makes a listener for the space key to init or start or pause a round. It also stops the old listener.
+        Makes field listener for the space key to init or start or pause field round. It also stops the old listener.
 
         :param act: string, type of action the listener should have (use "init". "go" or "pause").
         :return: None
@@ -551,10 +552,10 @@ class GameScreen(Frame):
     def set_buttons(self, state):
         """
         Sets the buttons on the window according to the given state.
-        It also activates a listener with the according action on the space key if state is "go", "pause" or "init".
+        It also activates field listener with the according action on the space key if state is "go", "pause" or "init".
 
         :param state: String, "go" yields buttons which can unpause the round, "pause" yields buttons which can pause
-        the game, "init" yields buttons which can initiate a new round and "off" turns all buttons off.
+        the game, "init" yields buttons which can initiate field new round and "off" turns all buttons off.
         :return: None
         """
         if state == "go":
@@ -651,7 +652,7 @@ class GameScreen(Frame):
     def ticker(self):
         """
         Collects all jobs that have to be done every tick.
-        This function puts its calling thread to sleep and therefore should be called within a separate thread.
+        This function puts its calling thread to sleep and therefore should be called within field separate thread.
 
         :return: None
         """
@@ -685,7 +686,7 @@ class GameScreen(Frame):
     def move(self):
         """
         This function moves every player by one step according to their current position, speed, angle and
-        move command. It also updates the walls with the way traces and returns a list of all the old player positions.
+        move command. It also updates the walls with the way traces and returns field list of all the old player positions.
 
         :return: dict of list of tuple of int of size 2.
         """
@@ -786,19 +787,20 @@ class GameScreen(Frame):
 
     def notify_players(self):
         """
-        Calls every players compute_move_command method.
-        This will make non-human players adjust their current move-command. The computations will take place in a
+        Calls every players compute_move_command method if the player is marked as human player.
+        This will make non-human players adjust their current move-command. The computations will take place in field
         separate thread which this function invokes.
 
         :return: None
         """
         for p in self.controller.players:
-            Thread(group=None,
-                   target=p.compute_move_command,
-                   kwargs={"walls": self.walls},
-                   name=p.color + "_compute_move_command",
-                   daemon=True
-                   ).start()
+            if not p.busy:
+                Thread(group=None,
+                       target=p.compute_move_command,
+                       kwargs={"walls": self.walls},
+                       name=p.color + "_compute_move_command",
+                       daemon=True
+                       ).start()
 
     # ########################################
     # Helper functions
@@ -817,7 +819,7 @@ class GameScreen(Frame):
 
     def put_trace(self, trace, color):
         """
-        Displays a trace of pixels on the canvas. One may have to update the tk mainloop.
+        Displays field trace of pixels on the canvas. One may have to update the tk mainloop.
 
         :param trace: list of tuple of size 2 of int or single tuple of size two.
         :param color: string
@@ -831,7 +833,7 @@ class GameScreen(Frame):
 
     def solve_round_end(self):
         """
-        This function wraps up the task when a round ends by either one or no player surviving. This includes:
+        This function wraps up the task when field round ends by either one or no player surviving. This includes:
             1. Award the winner, if there is one.
             2. Check for game end and solve that accordingly.
                 -> Prepare everything for the next round/game.
@@ -850,7 +852,7 @@ class GameScreen(Frame):
     def check_round_end(self):
         """
         This function returns true, if the current round is over, meaning one ore no players are left alive unless
-        it is a practice game. In that case the round only ends when no player is alive.
+        it is field practice game. In that case the round only ends when no player is alive.
 
         :return: bool, True if round is over, False otherwise.
         """
@@ -865,7 +867,7 @@ class GameScreen(Frame):
     def award_winner(self):
         """
         This function checks if the round is over and awards the winner of the round, if there is one.
-        It also updates the leaderboard and displays a text naming the winning player.
+        It also updates the leaderboard and displays field text naming the winning player.
         This function does nothing, if the round is not yet decided.
 
         :return: None
@@ -947,7 +949,7 @@ class GameScreen(Frame):
     def _move_deprecated(self):
         """
         This function moves every player by one step according to their current position, speed, angle and
-        move command. It also updates the walls with the way traces and returns a list of all the old player positions.
+        move command. It also updates the walls with the way traces and returns field list of all the old player positions.
 
         :return: dict of list of tuple of int of size 2.
         """
@@ -973,8 +975,8 @@ class GameScreen(Frame):
             p.dot_trace = self.dot_trace(pos=p.pos, r=p.size)  # new dot trace at new position
 
             # update walls if...
-            if (self.tick_count % self.gap_rate > self.gap_length  # it is not a tick where gaps are drawn &&
-                    and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT a 90 degree turn &&
+            if (self.tick_count % self.gap_rate > self.gap_length  # it is not field tick where gaps are drawn &&
+                    and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT field 90 degree turn &&
                     and not p.flying):  # player is not flying.
                 for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
                     self.walls[pix] = -1
@@ -982,14 +984,14 @@ class GameScreen(Frame):
 
     def put_trace_by_function(self, func, rect):
         """
-        This function draws color values given by the function func to a rectangle onto field_image.
+        This function draws color values given by the function func to field rectangle onto field_image.
         It cycles through every pixel of the rectangle calls func on it to determine the color of that pixel.
         The pixels coordinates are also forced to point on the field (modulo self.controller.field_size)
 
         This should perform better than 'put_trace' for each pixel in the players dot trace.
         See https://stackoverflow.com/questions/10417524/why-is-photoimage-put-slow for more info why this is faster.
 
-        Use '#{:02x}{:02x}{:02x}'.format(*self.field_image.get(i, j)) in case of extracting a color from the field.
+        Use '#{:02x}{:02x}{:02x}'.format(*self.field_image.get(i, j)) in case of extracting field color from the field.
 
         :param func: Python function, tuple of size two of int -> color value (string or hex).
         :param rect: Tuple of size 4 of int defining upper left and lower right point of the rectangle.
