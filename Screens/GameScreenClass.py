@@ -678,7 +678,7 @@ class GameScreen(Frame):
                                                                   round(self._interval, 4),
                                                                   round(update - start, 4)))
             # print("Sleep length:", self._interval - (update - start))
-            self.notify_players()
+            # self.notify_players()
             sleep(max([0, self._interval - (update - start)]))
             # end = default_timer()
             # print("Tick length:", end - start, "\n==============")
