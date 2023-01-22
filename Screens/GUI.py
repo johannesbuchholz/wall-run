@@ -1,9 +1,9 @@
-
+import os
+import pathlib
+import sys
 from tkinter import (Tk, Frame)
 
 from Screens import (RuleScreenClass, OptionScreenClass, GameScreenClass, TitleScreenClass)
-
-from FieldObjects.PlayerClassBot import PlayerBotContLossStrategy, PlayerBotConeStrategy
 
 
 class GUI(Tk):
@@ -66,7 +66,8 @@ class GUI(Tk):
         # GUI objects
         self.frames = {"Title": TitleScreenClass.TitleScreen(parent=container, controller=self),
                        "Rules": RuleScreenClass.RuleScreen(parent=container, controller=self),
-                       "Options": OptionScreenClass.OptionScreen(parent=container, controller=self),
+                       "Options": OptionScreenClass.
+                       OptionScreen(parent=container, controller=self),
                        "Game": GameScreenClass.GameScreen(parent=container, controller=self)}
 
         self.frames["Title"].grid(row=0, column=0, sticky="nsew")
@@ -91,3 +92,12 @@ class GUI(Tk):
         """
         self.destroy()
         exit()
+
+
+def get_execution_path() -> str:
+    execution_path = pathlib.Path(sys.argv[0])
+    if execution_path.is_file():
+        return os.getcwd() + "/" + str(execution_path.parent)
+    else:
+        return os.getcwd() + "/" + str(execution_path)
+

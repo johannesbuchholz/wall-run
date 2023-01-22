@@ -1,5 +1,10 @@
-
 from Screens import GUI
 
-gui = GUI.GUI()
-gui.mainloop()
+
+def run():
+    gui = GUI.GUI()
+    gui.mainloop()
+
+
+if __name__ == "__main__":
+    run()

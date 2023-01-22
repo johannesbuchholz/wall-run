@@ -9,6 +9,7 @@ from time import sleep
 from timeit import default_timer
 from pynput import keyboard
 
+from Screens import GUI
 from Utils.Const import *
 from Utils.HelperFunctions import get_rectangle_corners
 
@@ -234,7 +235,7 @@ class GameScreen(Frame):
         """
         # -- Create and store item
         item_to_place = self.create_item_by_name(name)
-        icon = PhotoImage(file=item_to_place.image_path)
+        icon = PhotoImage(file=GUI.get_execution_path() + "/" + item_to_place.image_path)
         self.items_spawned[self.item_id] = (item_to_place, icon, pos)
         # -- Place item on the field
         # visually
@@ -677,11 +678,7 @@ class GameScreen(Frame):
                       "\nTick: {}, wanted: {}, actual: {}".format(self.tick_count,
                                                                   round(self._interval, 4),
                                                                   round(update - start, 4)))
-            # print("Sleep length:", self._interval - (update - start))
-            # self.notify_players()
             sleep(max([0, self._interval - (update - start)]))
-            # end = default_timer()
-            # print("Tick length:", end - start, "\n==============")
 
     def move(self):
         """

@@ -1,9 +1,9 @@
-
 from tkinter import (Frame, Label, Button, Entry, IntVar, Radiobutton, PhotoImage,
                      TOP,
                      )
 from pynput import keyboard
 from FieldObjects import PlayerClass
+from Screens import GUI
 
 
 class OptionScreen(Frame):
@@ -60,13 +60,13 @@ class OptionScreen(Frame):
         cnf_button_thin1 = {"width": 10, "height": 1, "borderwidth": 1}
 
         # -- Labels
-        Label(master=self, text="Options", font=self.controller.font_bigger)\
+        Label(master=self, text="Options", font=self.controller.font_bigger) \
             .grid(row=1, column=1, pady=10)
-        Label(master=self, text="Name", font=self.controller.font_medium)\
+        Label(master=self, text="Name", font=self.controller.font_medium) \
             .grid(row=3, column=1, columnspan=1, pady=10)
-        Label(master=self, text="Keys", font=self.controller.font_medium)\
+        Label(master=self, text="Keys", font=self.controller.font_medium) \
             .grid(row=4, column=1, columnspan=1, pady=10)
-        Label(master=self, text="Max rounds", font=self.controller.font_medium)\
+        Label(master=self, text="Max rounds", font=self.controller.font_medium) \
             .grid(row=6, column=1, columnspan=1, pady=10)
         Label(master=self, text="Items", font=self.controller.font_medium) \
             .grid(row=7, column=1, columnspan=1, pady=10)
@@ -128,7 +128,7 @@ class OptionScreen(Frame):
         for item_name, i in zip(self.controller.all_items, range(len(self.controller.all_items))):
             name_short = item_name.replace("Item", "")
             # Icon
-            icon = PhotoImage(file="./Data/Icon{}.png".format(name_short))
+            icon = PhotoImage(file=GUI.get_execution_path() + "/Data/Icon{}.png".format(name_short))
             self.item_icons.append(icon)
             # Button
             button_item = Button(master=self, text=name_short, relief="sunken",
