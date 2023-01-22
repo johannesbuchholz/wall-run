@@ -82,7 +82,7 @@ def stochastic_gradient_descent(f, deriv, x0, stepsize, samples, batchsize=-1, m
         if no_sampling:
             x = x - deriv(x, random_samples, **kwargs)
         else:
-            x = x - stepsize / (1+i)**2 * deriv(x, random_samples, **kwargs)
+            x = x - stepsize / (1 + i) ** 2 * deriv(x, random_samples, **kwargs)
         # print("Current x: ", x)
         # print("Current loss: ", f(x, samples, **kwargs))
         # print("Current garadient: ", deriv(x, samples, **kwargs))
@@ -112,13 +112,13 @@ def cone_contains(x, y, t, a):
     t = t % 360
     # if t > 0:
     #     t = 360 - t
-    x_norm = x/sqrt(x**2+y**2)
-    y_norm = y/sqrt(x**2+y**2)
+    x_norm = x / sqrt(x ** 2 + y ** 2)
+    y_norm = y / sqrt(x ** 2 + y ** 2)
     t_x, t_y = get_point_from_angle(t)
-    a_x, a_y = get_point_from_angle((t+a/2) % 360)
-    print("(x,y) = ({0}, {1})".format(x, y), "t = ", t, "t+a/2%360 = ", t+a/2 % 360)
-    print("x-t: ", (x_norm-t_x)**2 + (y_norm-t_y)**2, "a/2-t: ", (a_x-t_x)**2 + (a_y-t_y)**2)
-    return (x_norm-t_x)**2 + (y_norm-t_y)**2 <= (a_x-t_x)**2 + (a_y-t_y)**2
+    a_x, a_y = get_point_from_angle((t + a / 2) % 360)
+    print("(x,y) = ({0}, {1})".format(x, y), "t = ", t, "t+a/2%360 = ", t + a / 2 % 360)
+    print("x-t: ", (x_norm - t_x) ** 2 + (y_norm - t_y) ** 2, "a/2-t: ", (a_x - t_x) ** 2 + (a_y - t_y) ** 2)
+    return (x_norm - t_x) ** 2 + (y_norm - t_y) ** 2 <= (a_x - t_x) ** 2 + (a_y - t_y) ** 2
 
 
 def arctan_lim(x, y):
@@ -148,7 +148,7 @@ def get_angle_between_vectors(x, y, p, q):
     :param q: int, 2nd y-coordinate
     :return: float, Angle in integer degrees in [0, 180)
     """
-    return rad2deg(arccos((x*p+y*q)/(sqrt((x**2+y**2)*(p**2+q**2)))))
+    return rad2deg(arccos((x * p + y * q) / (sqrt((x ** 2 + y ** 2) * (p ** 2 + q ** 2)))))
 
 
 def get_point_from_angle(angle):
@@ -169,7 +169,7 @@ def get_point_from_angle(angle):
     else:
         sign = -1
     angle = deg2rad(360 - angle)
-    return sign * sqrt(1-sin(angle)**2), sin(angle)
+    return sign * sqrt(1 - sin(angle) ** 2), sin(angle)
 
 
 def get_angle_of_point(x, y):
@@ -184,15 +184,15 @@ def get_angle_of_point(x, y):
     if x == y == 0:
         return 0
 
-    norm = sqrt(x**2+y**2)
+    norm = sqrt(x ** 2 + y ** 2)
     if x > 0 and y >= 0:
-        return rad2deg(arcsin(abs(y)/norm))
+        return rad2deg(arcsin(abs(y) / norm))
     elif x <= 0 and y > 0:
-        return 90 + rad2deg(arcsin(abs(y)/norm))
+        return 90 + rad2deg(arcsin(abs(y) / norm))
     elif x < 0 and y <= 0:
-        return 180 + rad2deg(arcsin(abs(y)/norm))
+        return 180 + rad2deg(arcsin(abs(y) / norm))
     else:
-        return 270 + rad2deg(arcsin(abs(y)/norm))
+        return 270 + rad2deg(arcsin(abs(y) / norm))
 
 
 def get_normal_from_angle(angle):
@@ -220,7 +220,7 @@ def is_point_on_left_side(angle, x, y):
     :return:
     """
     n1, n2 = get_normal_from_angle(angle)
-    return x*n1 + y*n2 >= 0
+    return x * n1 + y * n2 >= 0
 
 
 def get_direction_from_angle(angle):
@@ -246,8 +246,8 @@ def is_contained_in_cone(x, y, facing_angle, apex_angle):
     :return: boolean, true if the point is strictly contained in the cone.
     """
     assert 180 >= apex_angle >= 0, "apex_angle must be in [0, 360)."
-    x_left, y_left = get_direction_from_angle(facing_angle - apex_angle/2)
-    x_right, y_right = get_direction_from_angle(facing_angle + apex_angle/2)
+    x_left, y_left = get_direction_from_angle(facing_angle - apex_angle / 2)
+    x_right, y_right = get_direction_from_angle(facing_angle + apex_angle / 2)
 
     n_x_left, n_y_left = -y_left, x_left  # normal of left cone vector
     n_x_right, n_y_right = y_right, -x_right  # normal of right cone vector

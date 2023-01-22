@@ -1,4 +1,3 @@
-
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -8,6 +7,7 @@ class ItemZiggZaggAll(ItemBase):
     sets the collecting everybody's but the collecting players turn rate to RATE_RIGHT_ANGLE.
     Every turn will then be a 90 degree turn.
     """
+
     # __init__ from base class.
     def __init__(self, controller, gamescreen):
         ItemBase.__init__(self, controller, gamescreen)

@@ -1,4 +1,3 @@
-
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -7,11 +6,11 @@ class ItemFastAll(ItemBase):
     """
     Increases the speed of every player but the collecting player by one step if possible.
     """
+
     # __init__ from base class.
     def __init__(self, controller, gamescreen):
         ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_NORMAL
-        # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconFastAll.png"
         self.players_to_ignore = []  # Stores all players having max speed at the time of collecting this item.
 

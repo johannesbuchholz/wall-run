@@ -1,4 +1,3 @@
-
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -7,11 +6,11 @@ class ItemBigAll(ItemBase):
     """
     Increases the size of every player but the collecting player by one step.
     """
+
     # __init__ from base class.
     def __init__(self, controller, gamescreen):
         ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_NORMAL
-        # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconBigAll.png"
         self.players_to_ignore = []  # Stores all players to ignore by this item
 
@@ -43,4 +42,3 @@ class ItemBigAll(ItemBase):
             else:
                 # Choose next bigger value from the SPEEDS list
                 p.size = SIZES[max(SIZES.index(p.size) - 1, 0)]
-

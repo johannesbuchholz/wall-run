@@ -1,4 +1,3 @@
-
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -8,11 +7,11 @@ class ItemFly(ItemBase):
     Makes the player flying and being able to cross any walls while not making a wall by himself during the time
     of this item being active.
     """
+
     # __init__ from base class.
     def __init__(self, controller, gamescreen):
         ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_SHORT
-        # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconFly.png"
 
     def activate(self, player):

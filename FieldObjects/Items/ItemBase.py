@@ -1,4 +1,3 @@
-
 from Utils.Const import *
 
 
@@ -6,9 +5,10 @@ class ItemBase:
     """
     This class represents the base class of all items that may appear on the screen. It does not have any effect.
     """
+
     def __init__(self, controller, gamescreen):
         """
-        Creates an base Item.
+        Creates a base Item.
 
         :param controller: Controller instance of the game screen.
         :param gamescreen: The gamescreen instance where this item is placed in.
@@ -19,7 +19,7 @@ class ItemBase:
 
         # This value should be manually adjusted depending on the respective Item that inherits this class.
         self.duration = DURATION_NORMAL
-        self.image_path = "Data/DefaultIcon.png"  # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
+        self.image_path = "Data/DefaultIcon.png"
 
         self.player = None  # Will be defined during method call activate.
 

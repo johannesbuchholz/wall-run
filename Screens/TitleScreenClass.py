@@ -1,6 +1,6 @@
-
 from tkinter import (Frame, Label, Button,
                      TOP, CENTER, BOTTOM)
+
 from Screens import GameScreenClass
 
 

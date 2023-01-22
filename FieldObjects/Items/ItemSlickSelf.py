@@ -1,4 +1,3 @@
-
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -7,16 +6,13 @@ class ItemSlickSelf:
     """
     Makes the collecting player turn faster.
     """
+
     # __init__ from base class.
     def __init__(self, controller, gamescreen):
         ItemBase.__init__(self, controller, gamescreen)
-
         self.duration = DURATION_LONG
-        # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconSlickSelf.png"
-
         self.player = None  # Will be defined during method call activate.
-
         self.ignore = None
 
     def activate(self, player):

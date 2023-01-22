@@ -1,5 +1,5 @@
-
 from numpy.random import default_rng
+
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -8,11 +8,11 @@ class ItemBlock(ItemBase):
     """
     Places a Block randomly on the field.
     """
+
     # __init__ from base class.
     def __init__(self, controller, gamescreen):
         ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_INFINITE  # No effective usage
-        # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconBlock.png"
         self.rng = default_rng()
         self.blocksize = 100
@@ -32,7 +32,7 @@ class ItemBlock(ItemBase):
                                         to=(x_rand, y_rand, x_rand + self.blocksize, y_rand + self.blocksize)
                                         )
         # Effectively
-        self.gamescreen.walls[x_rand:x_rand+self.blocksize, y_rand:y_rand+self.blocksize] = -1
+        self.gamescreen.walls[x_rand:x_rand + self.blocksize, y_rand:y_rand + self.blocksize] = -1
 
     def deactivate(self):
         """

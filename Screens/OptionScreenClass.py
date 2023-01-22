@@ -1,7 +1,9 @@
 from tkinter import (Frame, Label, Button, Entry, IntVar, Radiobutton, PhotoImage,
                      TOP,
                      )
+
 from pynput import keyboard
+
 from FieldObjects import PlayerClass
 from Screens import GUI
 
@@ -85,12 +87,12 @@ class OptionScreen(Frame):
                                    fg=p["color"], activeforeground=p["color"],
                                    relief="sunken",
                                    cnf=cnf_button_toggle_player)
-            button_toggle.grid(row=2, column=2*i, columnspan=2)
+            button_toggle.grid(row=2, column=2 * i, columnspan=2)
             self.toggle_buttons.append(button_toggle)
             # name field
             entry_field = Entry(master=self, bd=1, width=14)
             entry_field.insert(0, p["name"])
-            entry_field.grid(row=3, column=2*i, columnspan=2, padx=8)
+            entry_field.grid(row=3, column=2 * i, columnspan=2, padx=8)
             self.name_fields.append(entry_field)
             # direction labels
             try:
@@ -101,12 +103,12 @@ class OptionScreen(Frame):
                 label_right = Label(master=self, text=str(p["keys"]["right"])[4:], relief="ridge", cnf=cnf_label_keys)
             self.key_labels_left.append(label_left)
             self.key_labels_right.append(label_right)
-            label_left.grid(row=4, column=i*2)
-            label_right.grid(row=4, column=i*2+1)
+            label_left.grid(row=4, column=i * 2)
+            label_right.grid(row=4, column=i * 2 + 1)
             # key chooser
             button_key = Button(master=self, text="Adjust", command=p["adjust"],
                                 cnf=cnf_button_adjust)
-            button_key.grid(row=5, column=2*i, columnspan=2, pady=6)
+            button_key.grid(row=5, column=2 * i, columnspan=2, pady=6)
             self.adjust_buttons.append(button_key)
 
         # -- Round chooser
@@ -114,7 +116,7 @@ class OptionScreen(Frame):
         for i, j in zip(range(5, 31, 5), range(1, 7)):
             round_button = Radiobutton(master=self, text=str(i), variable=self.max_round, value=i, indicatoron=0,
                                        width=12, height=2)
-            round_button.grid(row=6, column=2*j, columnspan=2, pady=6)
+            round_button.grid(row=6, column=2 * j, columnspan=2, pady=6)
 
         # -- Item selection
         self.item_toggle_functions = {name: lambda name=name: self.toggle_item(name)
@@ -136,8 +138,8 @@ class OptionScreen(Frame):
                                  image=icon, compound=TOP,
                                  cnf=cnf_button_item
                                  )
-            button_item.grid(row=7+int(i/items_per_row),
-                             column=column_offset+(2 * i) % (items_per_row * 2),
+            button_item.grid(row=7 + int(i / items_per_row),
+                             column=column_offset + (2 * i) % (items_per_row * 2),
                              columnspan=2)
             self.item_buttons[item_name] = button_item
 

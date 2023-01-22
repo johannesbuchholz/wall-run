@@ -1,5 +1,6 @@
-from Utils.HelperFunctions import *
 import numpy as np
+
+from Utils.HelperFunctions import *
 
 print(get_point_from_angle(180))
 print(cone_contains(-1, 0, 180, 30))
@@ -21,9 +22,9 @@ walls[x, y] = -1
 n, _ = np.shape(walls)
 
 a = [(i - x, j - y)
-    for i in range(x - scope_radius, x + scope_radius + 1)
-    for j in range(y - scope_radius, y + scope_radius + 1)
-    if walls[i % n, j % n] == -1 and sqrt((i - x) ** 2 + (j - y) ** 2) < scope_radius]
+     for i in range(x - scope_radius, x + scope_radius + 1)
+     for j in range(y - scope_radius, y + scope_radius + 1)
+     if walls[i % n, j % n] == -1 and sqrt((i - x) ** 2 + (j - y) ** 2) < scope_radius]
 
 print(walls)
 print(a)

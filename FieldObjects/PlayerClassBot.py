@@ -1,8 +1,8 @@
-from FieldObjects.PlayerClass import Player
-from pynput import keyboard
-from Utils.Const import *
 from numpy import shape, sqrt
+from pynput import keyboard
 
+from FieldObjects.PlayerClass import Player
+from Utils.Const import *
 from Utils.HelperFunctions import (stochastic_gradient_descent, is_contained_in_cone, is_point_on_left_side)
 from Utils.TargetFunctions import target_function_cont, target_function_cont_d
 
@@ -184,9 +184,9 @@ class PlayerBotConeStrategy(Player):
             if is_contained_in_cone(i, j, facing_angle=self.angle, apex_angle=self.apex_angle):
                 cone_points.append((i, j))
                 if is_point_on_left_side(self.angle, i, j):
-                    left_score += 1 #/ sqrt(i ** 2 + j ** 2)
+                    left_score += 1  # / sqrt(i ** 2 + j ** 2)
                 else:
-                    right_score += 1 #/ sqrt(i ** 2 + j ** 2)
+                    right_score += 1  # / sqrt(i ** 2 + j ** 2)
         if left_score < right_score:
             self.move_command = DIR_LEFT
         elif left_score > right_score:
@@ -211,7 +211,7 @@ class PlayerBotConeStrategy(Player):
         # Convention is that walls contains -1 at [x, y] if the canvas pixel (x, y) shows a wall.
         x, y = self.pos
         n, _ = shape(walls)
-        return [(i-x, j-y)
+        return [(i - x, j - y)
                 for i in range(x - self.scope_radius, x + self.scope_radius + 1)
                 for j in range(y - self.scope_radius, y + self.scope_radius + 1)
                 if walls[i % n, j % n] == -1]

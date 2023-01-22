@@ -52,10 +52,10 @@ class GUI(Tk):
         # dummy_player2 = PlayerBotContLossStrategy(name="Bot2", color="Blue")
         # dummy_player3 = PlayerBotContLossStrategy(name="Bot3", color="Orange")
         self.players = [
-                        # dummy_player1,
-                        # dummy_player2,
-                        # dummy_player3
-                        ]
+            # dummy_player1,
+            # dummy_player2,
+            # dummy_player3
+        ]
         self.max_rounds = 5
         # All items registered
         self.all_items = ["ItemClear", "ItemBlock", "ItemJump", "ItemGlueAll", "ItemSlickSelf", "ItemFly",
@@ -96,8 +96,13 @@ class GUI(Tk):
 
 def get_execution_path() -> str:
     execution_path = pathlib.Path(sys.argv[0])
-    if execution_path.is_file():
-        return os.getcwd() + "/" + str(execution_path.parent)
+    if execution_path.is_absolute():
+        if execution_path.is_file():
+            return str(execution_path.parent)
+        else:
+            return str(execution_path)
     else:
-        return os.getcwd() + "/" + str(execution_path)
-
+        if execution_path.is_file():
+            return os.getcwd() + "/" + str(execution_path.parent)
+        else:
+            return os.getcwd() + "/" + str(execution_path)

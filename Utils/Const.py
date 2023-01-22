@@ -1,4 +1,3 @@
-
 # -- Player Directions
 DIR_LEFT = -1
 DIR_RIGHT = 1

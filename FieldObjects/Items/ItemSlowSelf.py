@@ -1,4 +1,3 @@
-
 from FieldObjects.Items.ItemBase import ItemBase
 from Utils.Const import *
 
@@ -7,11 +6,11 @@ class ItemSlowSelf(ItemBase):
     """
     Decreases the speed of the collecting player by one step.
     """
+
     # __init__ from base class.
     def __init__(self, controller, gamescreen):
         ItemBase.__init__(self, controller, gamescreen)
         self.duration = DURATION_SHORT
-        # Relative path to item icon. (from __main__, 20 x 20 pixels, .png)
         self.image_path = "Data/IconSlowSelf.png"
         self.ignore = False  # Indicates if this Items effect should be ignored
 
@@ -40,4 +39,3 @@ class ItemSlowSelf(ItemBase):
             pass
         else:
             self.player.speed = SPEEDS[min(SPEEDS.index(self.player.speed) + 1, len(SPEEDS) - 1)]
-

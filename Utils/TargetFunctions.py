@@ -45,7 +45,7 @@ def target_function_cont(t, wall_points, pos, lam=0.0):
             x_norm = y_norm = 0
         sum_x += x_norm
         sum_y += y_norm
-    return 2/len(wall_points) * cos(t) * sum_x + 2/len(wall_points) * sin(t) * sum_y - 1 + 0.5 * lam * t**2
+    return 2 / len(wall_points) * cos(t) * sum_x + 2 / len(wall_points) * sin(t) * sum_y - 1 + 0.5 * lam * t ** 2
 
 
 def target_function_cont_d(t, wall_points, pos, lam=0.0):

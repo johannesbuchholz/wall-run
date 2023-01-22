@@ -1,13 +1,14 @@
-
-from pynput import keyboard
-from Utils.Const import *
 from numpy import sin, cos, radians
+from pynput import keyboard
+
+from Utils.Const import *
 
 
 class Player:
     """
     Represents one player and stores all player specific Information.
     """
+
     def __init__(self, name, color, keys={"left": keyboard.Key.left, "right": keyboard.Key.right}, alive=True,
                  speed=SPEED_NORMAL, size=SIZE_NORMAL, flying=False, pos=(100, 100), angle=0):
         """
@@ -81,7 +82,7 @@ class Player:
             current_facing_angle -= self.turn_rate
         v1, v2 = cos(radians(current_facing_angle)), sin(radians(current_facing_angle))
         p, q = self.pos
-        self.collision_head = [(x, y) for (x, y) in self.dot_trace if (x-p)*v1+(y-q)*v2 >= 0]
+        self.collision_head = [(x, y) for (x, y) in self.dot_trace if (x - p) * v1 + (y - q) * v2 >= 0]
 
     def pixel_in_tolerance(self, pix):
         """
@@ -102,6 +103,7 @@ class Player:
 
         :return: None
         """
+
         def on_press(key):
             if self.key_is_held_down and self.turn_rate == RATE_RIGHT_ANGLE:
                 self.move_command = DIR_STRAIGHT

@@ -1,12 +1,13 @@
+from datetime import datetime
 from importlib import import_module
-
-from numpy import sin, cos, radians, zeros, ones, argwhere
-from numpy.random import default_rng
 from threading import Thread
-from tkinter import (Frame, Canvas, PhotoImage, Label, Button,
-                     CENTER, DISABLED, NORMAL, NW, LEFT)
 from time import sleep
 from timeit import default_timer
+from tkinter import (Frame, Canvas, PhotoImage, Label, Button,
+                     CENTER, DISABLED, NORMAL, NW, LEFT)
+
+from numpy import sin, cos, radians, zeros, ones
+from numpy.random import default_rng
 from pynput import keyboard
 
 from Screens import GUI
@@ -24,7 +25,7 @@ class GameScreen(Frame):
     respectively. For convenience reasons, both layers use the same syntax for location description. This results in
     the second layer being mirrored compared to the first layer. An example:
         Considering the pixel on the first layer at position (x, y), x describing the horizontal location and y the
-        vertical location starting at the top left corner. In order for the second layer to align perfectly to that,
+        vertical location starting in the top left corner. In order for the second layer to align perfectly to that,
         the corresponding pixel should be at position [y, x] since the first entry describes the row number and the
         second entry the column number of field matrix.
         Instead, both layers store the corresponding pixel at (x, y) resulting in the second layer being
@@ -35,6 +36,7 @@ class GameScreen(Frame):
 
     def __init__(self, controller, parent):
         Frame.__init__(self, master=parent)
+
         self.parent = parent
         self.controller = controller
 
@@ -76,7 +78,7 @@ class GameScreen(Frame):
 
         # -- Game buttons
         button_setting = {"width": int(6 * controller.scale),
-                          "height": int(2 * controller.scale),
+                          "height": int(1 * controller.scale),
                           "font": controller.font_basic,
                           }
 
@@ -96,26 +98,32 @@ class GameScreen(Frame):
                                )
         self.bgopause.grid(row=1, column=11)
 
+        self.bscreenshot = Button(master=self,
+                                  text="Photo",
+                                  command=self.screenshot,
+                                  cnf=button_setting,
+                                  )
+        self.bscreenshot.grid(row=1, column=12)
+
         self.bback = Button(master=self,
                             text="Back",
                             command=self.back,
                             cnf=button_setting,
                             )
-
-        self.bback.grid(row=1, column=12)
+        self.bback.grid(row=2, column=11)
 
         # -- Game labels
-        self.label_rounds = Label(master=self,
-                                  font=self.controller.font_medium,
-                                  text="Round {0}\n {1} Points to win".format(self.current_round, self.max_wins),
-                                  )
-        self.label_rounds.grid(row=2, column=10, columnspan=3)
-
         self.label_info = Label(master=self,
                                 font=self.controller.font_medium,
-                                text="",
+                                text="Round {0}\n {1} Points to win".format(self.current_round, self.max_wins),
                                 )
         self.label_info.grid(row=3, column=10, columnspan=3)
+
+        # self.label_info = Label(master=self,
+        #                         font=self.controller.font_medium,
+        #                         text="",
+        #                         )
+        # self.label_info.grid(row=4, column=10, columnspan=3)
 
         # -- Player labels
         self.player_labels = []
@@ -589,7 +597,10 @@ class GameScreen(Frame):
         :return: None.
         """
         self.current_round += 1
-        self.label_rounds.config(text="Round {0}\n {1} Points to win".format(self.current_round, self.max_wins))
+        self.label_info.config(
+            text="Round {0}\n {1} Points to win".format(self.current_round, self.max_wins),
+            fg="Black"
+        )
         # Clear items
         self.reset_all_items()
         # clean canvas
@@ -600,8 +611,6 @@ class GameScreen(Frame):
         for p in self.controller.players:
             # Put player on field
             self.place_player(p)
-        # Other
-        self.label_info.config(text="")
 
     def start_round(self):
         """
@@ -625,8 +634,6 @@ class GameScreen(Frame):
                                   daemon=True
                                   )
         self.thread_jobs.start()
-        # Clear info message
-        self.label_info.config(text="")
 
     def pause_round(self):
         """
@@ -645,6 +652,15 @@ class GameScreen(Frame):
         self.turn_off_all_listeners()
         self.reset_all_items()
         self.controller.show_frame("Title")
+
+    def screenshot(self, ):
+        path = GUI.get_execution_path() + "/" + "wallrun_" + "{:%Y-%m-%d-%H-%M-%S}".format(datetime.now()) + ".jpg"
+        # ImageTk.getimage(self.field_image).save(path)
+        # postscript_str = self.canvas.postscript(colormode="color")
+        # img = Image.open(io.BytesIO(postscript_str.encode("utf-8")), formats=["ps"])
+        self.field_image.write(filename=path)
+        # img.save(path)
+        print("Wrote screenshot to " + path)
 
     # ########################################
     # Ticker functions
@@ -842,7 +858,8 @@ class GameScreen(Frame):
         if self.check_game_end():
             self.set_buttons(state="off")
             game_winner = sorted(self.controller.players, key=lambda p: p.wins)[-1]
-            self.label_info.config(text=str(game_winner.name) + "\nwins the game.\n Congratulations!")
+            self.label_info.config(text=str(game_winner.name) + "\nwins the game.\n Congratulations!",
+                                   fg=game_winner.color)
         else:
             self.set_buttons(state="init")
 
@@ -973,7 +990,8 @@ class GameScreen(Frame):
 
             # update walls if...
             if (self.tick_count % self.gap_rate > self.gap_length  # it is not field tick where gaps are drawn &&
-                    and (p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT field 90 degree turn &&
+                    and (
+                            p.turn_rate != RATE_RIGHT_ANGLE or player_moved_straight)  # there was NOT field 90 degree turn &&
                     and not p.flying):  # player is not flying.
                 for pix in [c for c in old_dot_trace if c not in p.dot_trace]:
                     self.walls[pix] = -1
