@@ -1,7 +1,12 @@
-# Wall Run
+# Wall Run: "Achtung, die Kurve!"
 
-This is a simple game written in Python 3 for up to six players - playable on one single keyboard.
-This project was inspired by the well known game "AchtungDieKurve".
+This is an interpretation of the game "Achtung die Kurve", purely written in python3 and playable for up to six players - all on one single keyboard.
+
+Highlights:
+- Up to six-player action on one keyboard
+- Choose from up to 17 powerups
+- Take screenshots of your most glorious victories
+- Mouse-free gameplay thanks to pause and resume function on space bar
 
 ![displaying wallrun menu](resources/wallrun_menu.png "wallrun menu")
 ![dsiblaying an active wallrun game](resources/wallrun_game.png "wallrun game")
@@ -24,12 +29,13 @@ This project was inspired by the well known game "AchtungDieKurve".
     python3 /<absolute path to direcory>/WallRun
     ```
 
-## Required Packages
+## Requirements
 
-In order to run this game you need the following packages:
+- python 3
+
+The following packages are required:
 
 - numpy (>=1.19.1)
 - pynput (>=1.6.8)
 
-After cloning this repository, use the `requirements.txt` file to install the above libraries into your virtual
-environment.
+The ui is based on tkinter which should already be included in your python installation.
