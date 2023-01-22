@@ -11,11 +11,10 @@ This project was inspired by the well known game "AchtungDieKurve".
 
 1. Clone this repository.
 2. Create a virtual environment inside the repository and activate it.
-3. Install teh required packages provided within the `requirements.txt` file by running
+3. Install the required packages provided within the `requirements.txt` file by running
     ```bash
     pip3 install -r requirements.txt
     ```
-   inside your virtual environments
 4. Start the programm by running
     ```bash
     python3 __main__.py
